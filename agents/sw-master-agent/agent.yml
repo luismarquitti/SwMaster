@@ -1,0 +1,17 @@
+name: SwMaster
+version: 1.0.0
+description: Autonomous Software Engineering Agent specialized in SWEBOK v4, focused on planning, development, GitHub integration, and maintenance of living documentation.
+template: full
+llm:
+  provider: google
+  model: gemini-2.5-pro
+  temperature: 0.2 # Low temperature to ensure precise and deterministic architectural decisions
+adapters:
+  - langgraph
+  - claude-code # Compatibility with coding terminals
+dependencies:
+  - github-tools
+  - mermaid-generator
+compliance:
+  sod_enabled: true
+  framework: custom-swebok # Enables segregation of duties defined in DUTIES.md

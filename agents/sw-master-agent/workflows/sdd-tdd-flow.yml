@@ -1,0 +1,44 @@
+name: sdd-tdd-feature-flow
+description: Deterministic development flow based on Specification (SDD) and TDD, with autonomous review and PR opening.
+version: 1.0
+
+steps:
+  - id: analyze_issue
+    skill: architect_and_planner
+    prompt: >
+      Read the issue specified in ${{ inputs.issue_number }}.
+      Generate a detailed technical specification (SDD) containing functional and non-functional requirements.
+      If there are database structures or classes, create the necessary Mermaid diagrams.
+      Record the design decision in `memory/key-decisions.md`.
+
+  - id: write_failing_tests
+    skill: quality_assurance
+    depends_on: [analyze_issue]
+    prompt: >
+      Acting as Checker, read the specification generated in the previous step: ${{ steps.analyze_issue.output }}.
+      Write the initial unit tests (which should fail) following the TDD methodology. 
+      Do not write the implementation code yet.
+
+  - id: write_production_code
+    skill: software_construction
+    depends_on: [write_failing_tests]
+    prompt: >
+      Acting as Maker, read the specification (${{ steps.analyze_issue.output }}) 
+      and the generated tests (${{ steps.write_failing_tests.output }}).
+      Write the clean, modular, and cohesive production code necessary ONLY to make the tests pass.
+
+  - id: code_review_and_qa
+    skill: quality_assurance
+    depends_on: [write_production_code]
+    prompt: >
+      Acting in the critical role of Checker/Auditor, review the code produced: ${{ steps.write_production_code.output }}.
+      Verify: cyclomatic complexity, potential vulnerabilities, adherence to SWEBOK v4, and whether the tests cover edge cases.
+      If there are issues, suggest corrections. If the code is accepted, generate an approval report.
+
+  - id: create_pull_request
+    skill: github_ops
+    depends_on: [code_review_and_qa]
+    prompt: >
+      Create a new branch from `main` called `feat/issue-${{ inputs.issue_number }}`.
+      Commit the tests, production code, updated documentation, and diagrams.
+      Open a detailed Pull Request containing the specification (SDD) and the QA report (${{ steps.code_review_and_qa.output }}) requesting human review.
