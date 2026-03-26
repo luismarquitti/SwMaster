@@ -26,6 +26,7 @@ function ChatContent() {
   const { messages, isRunning, processMessage } = useThread();
   const { threads, selectThread, switchToNewThread, isLoadingThreads, selectedThreadId } = useThreadList();
   const [showThreadList, setShowThreadList] = useState(false);
+  const [editingValue, setEditingValue] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
@@ -36,10 +37,29 @@ function ChatContent() {
   }, [messages]);
 
   const handleSend = async (text: string) => {
+    setEditingValue(""); // Clear any pending edit value
     await processMessage({ 
       role: "user",
       content: text 
     });
+  };
+
+  const handleCancelLastMessage = async () => {
+    if (!selectedThreadId || isRunning) return;
+    
+    try {
+      const resp = await fetch(`${API_BASE}/api/threads/${selectedThreadId}/messages/last`, {
+        method: 'DELETE'
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setEditingValue(data.cancelled_text || "");
+        // Force refresh the thread messages
+        selectThread(selectedThreadId);
+      }
+    } catch (err) {
+      console.error("Failed to cancel message:", err);
+    }
   };
 
   return (
@@ -159,9 +179,30 @@ function ChatContent() {
             </p>
           </div>
         )}
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} role={msg.role as any} content={msg.content} />
-        ))}
+        {messages.map((msg) => {
+          // OpenUI message content can be a string, array, or object.
+          // We extract the string for MessageBubble.
+          let textContent = "";
+          if (typeof msg.content === "string") {
+            textContent = msg.content;
+          } else if (Array.isArray(msg.content)) {
+            textContent = msg.content
+              .map((c) => (typeof c === "string" ? c : "text" in c ? c.text : ""))
+              .join("");
+          }
+
+          const isLastUser = msg.role === "user" && messages.filter(m => m.role === "user").pop()?.id === msg.id;
+
+          return (
+            <MessageBubble
+              key={msg.id}
+              role={msg.role as any}
+              content={textContent}
+              isLast={isLastUser}
+              onEdit={handleCancelLastMessage}
+            />
+          );
+        })}
         {isRunning && (
           <div className="flex items-center gap-2 px-2">
             <div className="ai-pulse w-4 h-4 rounded-full" />
@@ -171,7 +212,12 @@ function ChatContent() {
       </div>
 
       {/* Input */}
-      <ChatInput onSend={handleSend} isStreaming={isRunning} />
+      <ChatInput 
+        onSend={handleSend} 
+        isStreaming={isRunning} 
+        onCancelEdit={handleCancelLastMessage}
+        initialValue={editingValue}
+      />
     </section>
   );
 }

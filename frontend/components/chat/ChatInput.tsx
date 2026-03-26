@@ -4,29 +4,70 @@
  * ChatInput — Composer input with send button.
  */
 
-import { useState, useRef, type KeyboardEvent } from "react";
+import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   isStreaming: boolean;
+  onCancelEdit?: () => void;
+  initialValue?: string;
 }
 
-export default function ChatInput({ onSend, isStreaming }: ChatInputProps) {
-  const [value, setValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+export default function ChatInput({ 
+  onSend, 
+  isStreaming, 
+  onCancelEdit,
+  initialValue = "" 
+}: ChatInputProps) {
+  const [value, setValue] = useState(initialValue);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (initialValue) {
+      setValue(initialValue);
+      // Focus and adjust height
+      setTimeout(adjustHeight, 0);
+    }
+  }, [initialValue]);
+
+  function adjustHeight() {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      const newHeight = Math.min(textarea.scrollHeight, window.innerHeight / 3);
+      textarea.style.height = `${newHeight}px`;
+    }
+  }
 
   function handleSubmit() {
     const trimmed = value.trim();
     if (!trimmed || isStreaming) return;
     onSend(trimmed);
     setValue("");
-    inputRef.current?.focus();
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.focus();
+    }
   }
 
   function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // Arrow Up to edit last message if input is empty
+    if (e.key === "ArrowUp" && !value.trim() && onCancelEdit) {
       e.preventDefault();
-      handleSubmit();
+      onCancelEdit();
+      return;
+    }
+
+    // Swapped: Shift+Enter sends, Enter is next line
+    if (e.key === "Enter") {
+      if (e.shiftKey) {
+        e.preventDefault();
+        handleSubmit();
+      } else {
+        // Default Enter behavior in textarea is new line
+        // We just let it happen, but we need to adjust height
+        setTimeout(adjustHeight, 0);
+      }
     }
   }
 
@@ -39,36 +80,45 @@ export default function ChatInput({ onSend, isStreaming }: ChatInputProps) {
       }}
     >
       <div
-        className="relative flex items-center rounded-full px-3 py-1 transition-all"
+        className="relative flex items-end gap-2 rounded-2xl px-3 py-2 transition-all border"
         style={{
           background: "var(--surface-container-highest)",
+          borderColor: "rgba(204, 195, 213, 0.2)",
         }}
       >
         <button
-          className="p-2 rounded-full transition-colors"
+          className="p-2 rounded-full transition-colors mb-0.5"
           style={{ color: "var(--primary)" }}
         >
           <span className="material-symbols-outlined text-[18px]">attach_file</span>
         </button>
-        <input
-          ref={inputRef}
-          className="flex-1 bg-transparent border-none text-[13px] py-2 px-2 focus:outline-none"
-          style={{ color: "var(--on-surface)" }}
+        <textarea
+          ref={textareaRef}
+          className="flex-1 bg-transparent border-none text-[13px] py-1.5 px-2 focus:outline-none resize-none font-sans leading-relaxed"
+          style={{ 
+            color: "var(--on-surface)",
+            minHeight: "36px",
+            maxHeight: "33vh",
+            fontFamily: value.includes('```') || value.includes('{') ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' : 'inherit'
+          }}
           placeholder={
             isStreaming
               ? "SwMaster is thinking..."
-              : "Ask SwMaster about architecture, code, or QA..."
+              : "Ask SwMaster... (Shift+Enter to send)"
           }
-          type="text"
+          rows={1}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            setValue(e.target.value);
+            adjustHeight();
+          }}
           onKeyDown={handleKeyDown}
           disabled={isStreaming}
         />
         <button
           onClick={handleSubmit}
           disabled={!value.trim() || isStreaming}
-          className="p-2.5 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform disabled:opacity-40"
+          className="p-2.5 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform disabled:opacity-40 mb-0.5"
           style={{
             background: "var(--primary)",
             color: "var(--on-primary)",
