@@ -14,6 +14,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, StateGraph
 
 from app.agents.nodes.checker import checker_node
+from app.agents.nodes.conductor import conductor_node
 from app.agents.nodes.executor import executor_node
 from app.agents.nodes.maker import maker_node
 from app.agents.nodes.planner import planner_node
@@ -33,6 +34,7 @@ Your ONLY job is to classify the user's message into one of these skills:
 - **maker** — writing code, implementing features, fixing bugs
 - **checker** — code review, testing, QA, security audit
 - **executor** — git operations, branch creation, commits, pull requests
+- **conductor** — multi-step workflows, full lifecycle, pipeline, SDD-TDD process
 - **general** — general questions, greetings, explanations, anything else
 
 Respond with ONLY the skill name (one word, lowercase). No explanation.
@@ -57,7 +59,7 @@ async def router_node(state: AgentState) -> AgentState:
     route = response.content.strip().lower()
 
     # Validate route
-    valid_routes = {"planner", "maker", "checker", "executor", "general"}
+    valid_routes = {"planner", "maker", "checker", "executor", "conductor", "general"}
     if route not in valid_routes:
         logger.warning("Router returned unknown route '%s', defaulting to 'general'", route)
         route = "general"
@@ -98,7 +100,7 @@ question helpfully and concisely. When relevant, suggest which skill
 def _route_by_intent(state: AgentState) -> str:
     """Return the next node name based on router classification."""
     role = state.get("current_role", "general")
-    if role in ("planner", "maker", "checker", "executor"):
+    if role in ("planner", "maker", "checker", "executor", "conductor"):
         return role
     return "general"
 
@@ -130,6 +132,7 @@ def build_graph() -> StateGraph:
     graph.add_node("maker", maker_node)
     graph.add_node("checker", checker_node)
     graph.add_node("executor", executor_node)
+    graph.add_node("conductor", conductor_node)
     graph.add_node("general", general_node)
 
     # Entry point
@@ -144,12 +147,13 @@ def build_graph() -> StateGraph:
             "maker": "maker",
             "checker": "checker",
             "executor": "executor",
+            "conductor": "conductor",
             "general": "general",
         },
     )
 
     # All skill nodes terminate the graph for this turn
-    for node_name in ("planner", "maker", "checker", "executor", "general"):
+    for node_name in ("planner", "maker", "checker", "executor", "conductor", "general"):
         graph.add_edge(node_name, END)
 
     return graph.compile()

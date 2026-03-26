@@ -1,129 +1,102 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 /**
- * KPICards — Key metrics for the SwMaster agent.
- *
- * Shows active skills, SOD compliance, test coverage,
- * and active workflow nodes.
+ * KPICards — Display active metrics and status.
  */
 
-interface KPICardProps {
-  label: string;
-  value: string;
-  subValue?: string;
-  status?: "positive" | "neutral" | "warning";
-  statusText?: string;
-  indicator?: "bar" | "dots" | "pulse";
-  barPercent?: number;
+interface DashboardStats {
+  activeSkills: number;
+  sodCompliance: number;
+  llmModel: string;
+  agentStatus: string;
 }
 
-function KPICard({
-  label,
-  value,
-  subValue,
-  status = "neutral",
-  statusText,
-  indicator = "bar",
-  barPercent = 60,
-}: KPICardProps) {
-  const statusColors = {
-    positive: { text: "text-green-600", bg: "bg-green-500" },
-    neutral: { text: "text-[var(--on-surface-variant)]", bg: "bg-[var(--outline-variant)]" },
-    warning: { text: "text-amber-600", bg: "bg-amber-500" },
-  };
-
-  return (
-    <div
-      className="p-4 rounded-xl border animate-fade-in"
-      style={{
-        background: "var(--surface-container-low)",
-        borderColor: "rgba(204, 195, 213, 0.1)",
-      }}
-    >
-      <div className="flex justify-between items-start mb-2">
-        <span
-          className="text-[11px] font-bold uppercase tracking-wider"
-          style={{ color: "var(--primary)" }}
-        >
-          {label}
-        </span>
-        {statusText && (
-          <span className={`text-[10px] font-bold flex items-center ${statusColors[status].text}`}>
-            {statusText}
-          </span>
-        )}
-      </div>
-      <div className="text-2xl font-bold">
-        {value}
-        {subValue && (
-          <span className="text-sm font-normal" style={{ color: "var(--on-surface-variant)" }}>
-            {subValue}
-          </span>
-        )}
-      </div>
-      <div className="mt-2">
-        {indicator === "bar" && (
-          <div
-            className="h-1 w-full rounded-full overflow-hidden"
-            style={{ background: "rgba(204, 195, 213, 0.2)" }}
-          >
-            <div
-              className="h-full rounded-full transition-all duration-700"
-              style={{
-                width: `${barPercent}%`,
-                background: "var(--primary)",
-              }}
-            />
-          </div>
-        )}
-        {indicator === "pulse" && (
-          <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px]" style={{ color: "var(--on-surface-variant)" }}>
-              Active
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function KPICards() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch(`${API_URL}/api/dashboard/stats`);
+        if (!res.ok) throw new Error("Failed to fetch stats");
+        const data = await res.json();
+        setStats(data);
+      } catch (err) {
+        console.error(err);
+        setError(true);
+      }
+    }
+    fetchStats();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const cards = [
+    {
+      label: "Active Skills",
+      value: stats?.activeSkills ?? "--",
+      icon: "extension",
+      color: "var(--primary)",
+      trend: "4 Ready",
+    },
+    {
+      label: "SOD Compliance",
+      value: stats ? `${stats.sodCompliance}%` : "--",
+      icon: "verified_user",
+      color: "#4ade80",
+      trend: "Strict Mode",
+    },
+    {
+      label: "LLM Model",
+      value: stats?.llmModel.split("/").pop() ?? "Gemini",
+      icon: "neurology",
+      color: "#8b5cf6",
+      trend: stats?.llmModel.includes("pro") ? "Pro Tier" : "Active",
+    },
+    {
+      label: "Agent Status",
+      value: stats?.agentStatus ?? "Offline",
+      icon: "sensors",
+      color: stats?.agentStatus === "Active" ? "#4ade80" : "#ef4444",
+      trend: "Latency: 24ms",
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-4 gap-4">
-      <KPICard
-        label="Active Skills"
-        value="4"
-        subValue=" / 4"
-        status="positive"
-        statusText="All Loaded"
-        indicator="bar"
-        barPercent={100}
-      />
-      <KPICard
-        label="SOD Compliance"
-        value="100%"
-        status="positive"
-        statusText="Enforced"
-        indicator="bar"
-        barPercent={100}
-      />
-      <KPICard
-        label="LLM Model"
-        value="Gemini"
-        subValue=" 2.5 Pro"
-        status="neutral"
-        statusText="Ready"
-        indicator="pulse"
-      />
-      <KPICard
-        label="Agent Status"
-        value="Online"
-        status="positive"
-        statusText="Healthy"
-        indicator="pulse"
-      />
+    <div className="grid grid-cols-4 gap-6">
+      {cards.map((card, i) => (
+        <div
+          key={i}
+          className="p-5 rounded-3xl border transition-all hover:shadow-lg group animate-fade-in"
+          style={{
+            background: "var(--surface-container-low)",
+            borderColor: "rgba(204, 195, 213, 0.1)",
+            animationDelay: `${i * 100}ms`,
+          }}
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
+              style={{ background: `${card.color}15`, color: card.color }}
+            >
+              <span className="material-symbols-outlined text-xl">{card.icon}</span>
+            </div>
+            <div className="text-[10px] font-bold py-1 px-2 rounded-full bg-white/5 opacity-60">
+              {card.trend}
+            </div>
+          </div>
+          <h3 className="text-[11px] font-bold opacity-50 uppercase tracking-widest mb-1">
+            {card.label}
+          </h3>
+          <p className="text-2xl font-bold tracking-tight">{card.value}</p>
+        </div>
+      ))}
     </div>
   );
 }

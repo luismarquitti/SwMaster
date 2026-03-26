@@ -3,102 +3,44 @@
 /**
  * ChatPanel — Right-side AI chat interface.
  *
- * Uses OpenUI's ChatProvider + openAIAdapter for SSE streaming,
- * wrapping a custom UI that matches the stitch design.
+ * Fully integrated with OpenUI's ChatProvider for thread persistence
+ * and SSE streaming via the backend.
  */
 
-import { ChatProvider, openAIAdapter, openAIMessageFormat } from "@openuidev/react-headless";
-import { type ReactNode, useState, useRef, useEffect } from "react";
+import {
+  ChatProvider,
+  useThread,
+  useThreadList,
+  openAIAdapter,
+} from "@openuidev/react-headless";
+import { useState, useRef, useEffect } from "react";
 import ChatInput from "./ChatInput";
 import MessageBubble from "./MessageBubble";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /**
- * Inner chat content — reads thread state from OpenUI context.
+ * Inner chat content — uses OpenUI hooks for state management.
  */
 function ChatContent() {
-  // We manage messages locally for the MVP; OpenUI's useThread could
-  // be used once thread persistence is implemented.
-  const [messages, setMessages] = useState<
-    Array<{ id: string; role: "user" | "assistant"; content: string }>
-  >([]);
-  const [isStreaming, setIsStreaming] = useState(false);
+  const { messages, isRunning, processMessage } = useThread();
+  const { threads, selectThread, switchToNewThread, isLoadingThreads, selectedThreadId } = useThreadList();
+  const [showThreadList, setShowThreadList] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
-  async function handleSend(text: string) {
-    const userMsg = { id: crypto.randomUUID(), role: "user" as const, content: text };
-    const allMessages = [...messages, userMsg];
-    setMessages(allMessages);
-    setIsStreaming(true);
-
-    const assistantId = crypto.randomUUID();
-    setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "" }]);
-
-    try {
-      const res = await fetch(`${API_URL}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: allMessages.map((m) => ({ role: m.role, content: m.content })),
-          stream: true,
-        }),
-      });
-
-      if (!res.ok || !res.body) throw new Error("Stream failed");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-
-        // Process SSE lines
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") break;
-
-          try {
-            const chunk = JSON.parse(data);
-            const delta = chunk?.choices?.[0]?.delta?.content;
-            if (delta) {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId ? { ...m, content: m.content + delta } : m
-                )
-              );
-            }
-          } catch {
-            // skip malformed chunks
-          }
-        }
-      }
-    } catch (err) {
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === assistantId
-            ? { ...m, content: `⚠️ Error connecting to SwMaster backend: ${err}` }
-            : m
-        )
-      );
-    } finally {
-      setIsStreaming(false);
-    }
-  }
+  const handleSend = async (text: string) => {
+    await processMessage({ 
+      role: "user",
+      content: text 
+    });
+  };
 
   return (
     <section
@@ -110,7 +52,7 @@ function ChatContent() {
     >
       {/* Header */}
       <div
-        className="h-14 flex items-center px-6 justify-between"
+        className="h-14 flex items-center px-6 justify-between shrink-0"
         style={{ background: "var(--primary)", color: "var(--on-primary)" }}
       >
         <div className="flex items-center gap-3">
@@ -130,24 +72,76 @@ function ChatContent() {
               </span>
             </div>
             <div
-              className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
-              style={{
-                background: "#4ade80",
-                borderColor: "var(--primary)",
-              }}
+              className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 ${
+                isRunning ? "bg-amber-400" : "bg-[#4ade80]"
+              }`}
+              style={{ borderColor: "var(--primary)" }}
             />
           </div>
           <div>
             <h2 className="text-xs font-bold tracking-wide">SwMaster AI</h2>
             <span className="text-[9px] opacity-70 uppercase font-bold tracking-widest">
-              {isStreaming ? "Generating Response..." : "Ready — SWEBOK v4"}
+              {isRunning ? "Generating Response..." : "Ready — SWEBOK v4"}
             </span>
           </div>
         </div>
-        <button className="p-2 hover:bg-white/10 rounded-full transition">
-          <span className="material-symbols-outlined text-[18px]">more_vert</span>
-        </button>
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={() => switchToNewThread()}
+            title="New Chat"
+            className="p-2 hover:bg-white/10 rounded-full transition"
+          >
+            <span className="material-symbols-outlined text-[18px]">add_comment</span>
+          </button>
+          <button 
+            onClick={() => setShowThreadList(!showThreadList)}
+            className="p-2 hover:bg-white/10 rounded-full transition"
+            title="History"
+          >
+            <span className="material-symbols-outlined text-[18px]">history</span>
+          </button>
+        </div>
       </div>
+
+      {/* Thread List Flyout */}
+      {showThreadList && (
+        <div className="absolute top-14 left-0 w-full h-full z-20 flex flex-col p-4 animate-fade-in"
+             style={{ background: "var(--surface-container-lowest)" }}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-sm">Recent Conversations</h3>
+            <button onClick={() => setShowThreadList(false)} className="text-xs opacity-50 hover:opacity-100">
+              Close
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto space-y-2">
+            {isLoadingThreads ? (
+              <p className="text-xs opacity-50 p-4">Loading threads...</p>
+            ) : threads.length === 0 ? (
+              <p className="text-xs opacity-50 p-4">No history yet.</p>
+            ) : (
+              threads.map((t: any) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    selectThread(t.id);
+                    setShowThreadList(false);
+                  }}
+                  className={`w-full text-left p-3 rounded-xl border text-xs transition-all ${
+                    selectedThreadId === t.id 
+                      ? "border-[var(--primary)] bg-[var(--surface-container-low)] font-bold" 
+                      : "border-transparent hover:bg-[var(--surface-container)]"
+                  }`}
+                >
+                  <div className="truncate mb-1">{t.title}</div>
+                  <div className="text-[10px] opacity-40">
+                    {new Date(t.createdAt).toLocaleDateString()} {new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4 flex flex-col">
@@ -166,9 +160,9 @@ function ChatContent() {
           </div>
         )}
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} role={msg.role} content={msg.content} />
+          <MessageBubble key={msg.id} role={msg.role as any} content={msg.content} />
         ))}
-        {isStreaming && messages[messages.length - 1]?.role === "assistant" && (
+        {isRunning && (
           <div className="flex items-center gap-2 px-2">
             <div className="ai-pulse w-4 h-4 rounded-full" />
             <span className="text-[10px] italic opacity-50">Thinking...</span>
@@ -177,11 +171,19 @@ function ChatContent() {
       </div>
 
       {/* Input */}
-      <ChatInput onSend={handleSend} isStreaming={isStreaming} />
+      <ChatInput onSend={handleSend} isStreaming={isRunning} />
     </section>
   );
 }
 
 export default function ChatPanel() {
-  return <ChatContent />;
+  return (
+    <ChatProvider
+      apiUrl={`${API_BASE}/api/chat`}
+      threadApiUrl={`${API_BASE}/api/threads`}
+      streamProtocol={openAIAdapter()}
+    >
+      <ChatContent />
+    </ChatProvider>
+  );
 }

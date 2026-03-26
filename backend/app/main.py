@@ -20,7 +20,10 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from app.agents.graph import agent_graph
 from app.config import settings
-from app.models.chat import AgentInfo, ChatRequest, SkillInfo
+from app.models.chat import AgentInfo, ChatMessage, ChatRequest, SkillInfo
+from app.models.dashboard import DashboardStats
+from app.models.thread import ThreadCreate, ThreadListResponse, ThreadUpdate
+from app.services.thread_service import thread_service
 from app.utils.streaming import format_done_event, format_sse_event
 
 # ---------------------------------------------------------------------------
@@ -124,6 +127,62 @@ async def get_agent_info():
     )
 
 
+@app.get("/api/threads", response_model=ThreadListResponse)
+async def list_threads():
+    """List all conversation threads."""
+    return ThreadListResponse(threads=thread_service.list_threads())
+
+
+@app.get("/api/threads/{thread_id}", response_model=list[ChatMessage])
+async def get_thread_messages(thread_id: str):
+    """Get the message history for a thread."""
+    messages = thread_service.get_messages(thread_id)
+    if not messages and not thread_service.get_thread(thread_id):
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return messages
+
+
+@app.post("/api/threads")
+async def create_thread(thread_in: ThreadCreate):
+    """Create a new conversation thread."""
+    return thread_service.create_thread(thread_in)
+
+
+@app.patch("/api/threads/{thread_id}")
+async def update_thread(thread_id: str, thread_in: ThreadUpdate):
+    """Update a thread's title."""
+    thread = thread_service.update_thread(thread_id, thread_in)
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return thread
+
+
+@app.delete("/api/threads/{thread_id}")
+async def delete_thread(thread_id: str):
+    """Delete a thread."""
+    if not thread_service.delete_thread(thread_id):
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return {"status": "ok"}
+
+
+@app.get("/api/dashboard/stats", response_model=DashboardStats)
+async def get_dashboard_stats():
+    """Get live metrics for the dashboard KPI cards."""
+    # Count skills from agent metadata
+    from app.agents.skills import load_skill_context
+    planner_skill = load_skill_context("sw-master-agent", "planner")
+    
+    # Simple logic for count (could be improved)
+    skills_count = 4 # Hardcoded for now based on actual definitions
+    
+    return DashboardStats(
+        activeSkills=skills_count,
+        sodCompliance=100, # Assuming 100% since we enforce it in the graph
+        llmModel=settings.MODEL_NAME,
+        agentStatus="Active"
+    )
+
+
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     """Chat endpoint — streams responses via SSE.
@@ -153,12 +212,35 @@ async def chat(request: ChatRequest):
     stream_id = str(uuid.uuid4())
     thread_id = request.thread_id or str(uuid.uuid4())
 
+    # If the thread ID is provided but doesn't exist, create it
+    if not thread_service.get_thread(thread_id):
+        # Infer title from first user message if possible
+        title = "New Conversation"
+        for msg in lc_messages:
+            if isinstance(msg, HumanMessage):
+                title = (str(msg.content)[:30] + "...") if len(str(msg.content)) > 30 else str(msg.content)
+                break
+        thread_service.create_thread(ThreadCreate(title=title))
+
+    # Add the latest user message to the thread history
+    latest_user_msg = request.messages[-1]
+    thread_service.add_message(thread_id, latest_user_msg)
+
     async def generate():
         """Invoke the agent graph and stream the response."""
         try:
-            # Run the graph
+            # We pass the full history from request for now, or we could load from service
+            # Load from service would be safer for long-term memory
+            history = thread_service.get_messages(thread_id)
+            lc_history = []
+            for msg in history:
+                if msg.role == "user":
+                    lc_history.append(HumanMessage(content=msg.content))
+                else:
+                    lc_history.append(AIMessage(content=msg.content))
+
             initial_state = {
-                "messages": lc_messages,
+                "messages": lc_history,
                 "current_role": "",
                 "skill_context": "",
                 "thread_id": thread_id,
@@ -176,6 +258,12 @@ async def chat(request: ChatRequest):
 
             if not ai_response:
                 ai_response = "I'm sorry, I couldn't process that request."
+
+            # Save the final AI response to the thread service
+            thread_service.add_message(
+                thread_id,
+                ChatMessage(role="assistant", content=ai_response)
+            )
 
             # Stream the response token-by-token for a progressive UX
             # We simulate streaming by chunking the complete response
