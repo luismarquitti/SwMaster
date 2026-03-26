@@ -165,20 +165,25 @@ async def delete_thread(thread_id: str):
     return {"status": "ok"}
 
 
+@app.delete("/api/threads/{thread_id}/messages/last")
+async def delete_last_message(thread_id: str):
+    """Remove the last user/AI message pair and return the user message content."""
+    deleted_msg = thread_service.pop_last_messages(thread_id)
+    if not deleted_msg:
+        raise HTTPException(status_code=404, detail="No messages to delete")
+    return {"status": "ok", "cancelled_text": deleted_msg.content}
+
+
 @app.get("/api/dashboard/stats", response_model=DashboardStats)
 async def get_dashboard_stats():
     """Get live metrics for the dashboard KPI cards."""
-    # Count skills from agent metadata
-    from app.agents.skills import load_skill_context
-    planner_skill = load_skill_context("sw-master-agent", "planner")
-    
     # Simple logic for count (could be improved)
     skills_count = 4 # Hardcoded for now based on actual definitions
     
     return DashboardStats(
         activeSkills=skills_count,
         sodCompliance=100, # Assuming 100% since we enforce it in the graph
-        llmModel=settings.MODEL_NAME,
+        llmModel=settings.llm_model,
         agentStatus="Active"
     )
 

@@ -85,6 +85,27 @@ class ThreadService:
         
         self._messages[thread_id].append(message)
 
+    def pop_last_messages(self, thread_id: str) -> Optional[ChatMessage]:
+        """Remove and return the last user message and the corresponding AI response.
+        
+        Returns the content of the removed user message for editing.
+        """
+        if thread_id not in self._messages or not self._messages[thread_id]:
+            return None
+        
+        history = self._messages[thread_id]
+        
+        # If the last message is from the assistant, remove it
+        if history[-1].role == "assistant":
+            history.pop()
+            
+        # If the now-last message is from the user, remove it and return its content
+        if history and history[-1].role == "user":
+            user_msg = history.pop()
+            return user_msg
+            
+        return None
+
 
 # Singleton instance
 thread_service = ThreadService()
