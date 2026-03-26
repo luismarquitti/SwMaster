@@ -5,8 +5,9 @@ services:
       - "8000:8000"
     env_file: ./.env
     volumes:
-      - ./agents:/data/agents:ro
-      - ./skills:/data/skills:ro
+      - ./agents:/agents:ro
+      - ./skills:/skills:ro
+      - ./backend/app:/app/app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
