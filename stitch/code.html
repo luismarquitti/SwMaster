@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura Strategy - Data-Driven Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#4f1c9e",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#673ab7",
+                        "on-primary-container": "#d8c2ff",
+                        "surface": "#fef7ff",
+                        "on-surface": "#1d1a22",
+                        "surface-variant": "#e7e0eb",
+                        "on-surface-variant": "#4a4453",
+                        "outline": "#7b7484",
+                        "outline-variant": "#ccc3d5",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f9f1fc",
+                        "surface-container": "#f3ebf7",
+                        "surface-container-high": "#ede6f1",
+                        "surface-container-highest": "#e7e0eb",
+                        "secondary-container": "#e8def8",
+                        "on-secondary-container": "#1d192b",
+                        "tertiary-container": "#ffd9e3",
+                        "on-tertiary-container": "#31111d"
+                    },
+                    fontFamily: {
+                        "sans": ["Roboto", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "sm": "4px",
+                        "md": "8px",
+                        "lg": "12px",
+                        "xl": "16px",
+                        "2xl": "24px",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ai-pulse {
+            background: linear-gradient(135deg, #4f1c9e, #24b2fe);
+            filter: blur(8px);
+            opacity: 0.6;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ccc3d5;
+            border-radius: 10px;
+        }
+        .data-table-row:hover {
+            background-color: #f3ebf7;
+        }
+        .tab-active {
+            border-bottom: 3px solid #4f1c9e;
+            color: #4f1c9e;
+        }
+    </style>
+</head>
+<body class="bg-surface font-sans text-on-surface flex h-screen overflow-hidden">
+<nav class="fixed left-0 top-0 h-full z-40 bg-surface-container-low w-20 flex flex-col border-r border-outline-variant/30">
+<div class="flex flex-col items-center py-6 space-y-8 h-full">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-on-primary font-bold text-xl">A</div>
+<div class="flex flex-col items-center space-y-2 flex-1">
+<button class="bg-secondary-container text-on-secondary-container rounded-2xl p-3 transition-all">
+<span class="material-symbols-outlined block" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-2xl p-3 transition-all">
+<span class="material-symbols-outlined block">analytics</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-2xl p-3 transition-all">
+<span class="material-symbols-outlined block">database</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-2xl p-3 transition-all">
+<span class="material-symbols-outlined block">hub</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-2xl p-3 transition-all">
+<span class="material-symbols-outlined block">settings</span>
+</button>
+</div>
+<div class="mt-auto">
+<img alt="User profile" class="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdE0mShZBYfg3YhE2AnpUJGjgMGjMQtuQ_HKbXEW_LFrIbz7gM8v4pLa7qz7EzBLf0mIPmCOV6EQR5LIvrHOBfAAibYKKp3QvlrYT4UjeYAfbpN8wg1-dYdn0loxe5irRwq6MSiFRx-Vjahj0lrV8Ks333kLwfljFbEeCEtkZTSbCsdgPx5y3pgT6geYlPmBdzBypl3LptKIxpwfyJIxzeOlaU25fDKFVN81xdT0z96-QkXF4UK22Etclvseli50sdDLJiZrwt4hQ"/>
+</div>
+</div>
+</nav>
+<main class="flex w-full ml-20 h-full overflow-hidden">
+<section class="w-[65%] h-full bg-surface-container-lowest flex flex-col overflow-hidden">
+<header class="h-14 w-full flex items-center justify-between px-6 border-b border-outline-variant/20 bg-white">
+<div class="flex items-center space-x-4 flex-1">
+<div class="relative w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="w-full h-9 bg-surface-container-low border-none rounded-lg pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary" placeholder="Search strategy docs, metrics, or logs..." type="text"/>
+</div>
+<div class="h-6 w-px bg-outline-variant/50 mx-2"></div>
+<div class="flex items-center space-x-2">
+<button class="flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-outline-variant text-[11px] font-medium hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+<span>Advanced Filters</span>
+</button>
+<button class="flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-outline-variant text-[11px] font-medium hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+<span>Q3 2024</span>
+</button>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full">
+<span class="material-symbols-outlined text-[20px]">refresh</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+</div>
+</header>
+<div class="px-6 bg-white border-b border-outline-variant/20 flex items-center justify-between">
+<div class="flex space-x-8">
+<button class="py-3 text-sm font-medium tab-active flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">insights</span>
+<span>Executive Overview</span>
+</button>
+<button class="py-3 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">query_stats</span>
+<span>Market Performance</span>
+</button>
+<button class="py-3 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">account_tree</span>
+<span>Operations Tree</span>
+</button>
+<button class="py-3 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">layers</span>
+<span>Resource Allocation</span>
+</button>
+</div>
+<button class="p-1.5 text-outline hover:text-primary hover:bg-surface-container rounded-md">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<div class="grid grid-cols-4 gap-4">
+<div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wider">Gross Margin</span>
+<span class="text-green-600 text-[10px] font-bold flex items-center">+2.4% <span class="material-symbols-outlined text-[12px]">trending_up</span></span>
+</div>
+<div class="text-2xl font-bold">64.2%</div>
+<div class="mt-2 h-1 w-full bg-outline-variant/20 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[64%]"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wider">Burn Rate</span>
+<span class="text-on-surface-variant text-[10px] font-bold">Steady</span>
+</div>
+<div class="text-2xl font-bold">$142k<span class="text-sm font-normal text-on-surface-variant">/mo</span></div>
+<div class="mt-2 flex space-x-0.5">
+<div class="h-1 flex-1 bg-primary rounded-full"></div>
+<div class="h-1 flex-1 bg-primary rounded-full"></div>
+<div class="h-1 flex-1 bg-primary rounded-full opacity-30"></div>
+<div class="h-1 flex-1 bg-primary rounded-full opacity-30"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wider">CAC Ratio</span>
+<span class="text-red-600 text-[10px] font-bold flex items-center">-0.8% <span class="material-symbols-outlined text-[12px]">trending_down</span></span>
+</div>
+<div class="text-2xl font-bold">3.2x</div>
+<div class="mt-2 h-1 w-full bg-outline-variant/20 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[80%]"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[11px] font-bold text-primary uppercase tracking-wider">Active Nodes</span>
+<span class="text-green-600 text-[10px] font-bold">Optimal</span>
+</div>
+<div class="text-2xl font-bold">1,204</div>
+<div class="mt-2 flex items-center space-x-1">
+<div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+<span class="text-[10px] text-on-surface-variant">Syncing real-time</span>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-2xl border border-outline-variant/30 overflow-hidden">
+<div class="p-4 border-b border-outline-variant/20 flex items-center justify-between">
+<h3 class="text-sm font-bold flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-sm">list_alt</span>
+<span>Key Performance Indicators - Regional Analysis</span>
+</h3>
+<div class="flex space-x-2">
+<button class="text-xs text-primary font-medium px-2 py-1 rounded hover:bg-primary/5">View Full Dataset</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-xs border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant/20">
+<th class="px-4 py-3 font-bold text-on-surface-variant">Region</th>
+<th class="px-4 py-3 font-bold text-on-surface-variant">Market Cap</th>
+<th class="px-4 py-3 font-bold text-on-surface-variant">Growth</th>
+<th class="px-4 py-3 font-bold text-on-surface-variant">Efficiency</th>
+<th class="px-4 py-3 font-bold text-on-surface-variant">Risk Index</th>
+<th class="px-4 py-3 font-bold text-on-surface-variant">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="data-table-row transition-colors">
+<td class="px-4 py-3 font-medium">North America (NA)</td>
+<td class="px-4 py-3">$4.2M</td>
+<td class="px-4 py-3 text-green-600 font-bold">+12.4%</td>
+<td class="px-4 py-3">0.82</td>
+<td class="px-4 py-3">
+<div class="flex space-x-1">
+<div class="w-2 h-2 rounded-full bg-green-400"></div>
+<div class="w-2 h-2 rounded-full bg-outline-variant/30"></div>
+<div class="w-2 h-2 rounded-full bg-outline-variant/30"></div>
+</div>
+</td>
+<td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase">Optimal</span></td>
+</tr>
+<tr class="data-table-row transition-colors">
+<td class="px-4 py-3 font-medium">European Union (EU)</td>
+<td class="px-4 py-3">$3.8M</td>
+<td class="px-4 py-3 text-green-600 font-bold">+4.1%</td>
+<td class="px-4 py-3">0.76</td>
+<td class="px-4 py-3">
+<div class="flex space-x-1">
+<div class="w-2 h-2 rounded-full bg-yellow-400"></div>
+<div class="w-2 h-2 rounded-full bg-yellow-400"></div>
+<div class="w-2 h-2 rounded-full bg-outline-variant/30"></div>
+</div>
+</td>
+<td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold uppercase">Watching</span></td>
+</tr>
+<tr class="data-table-row transition-colors">
+<td class="px-4 py-3 font-medium">Asia Pacific (APAC)</td>
+<td class="px-4 py-3">$2.1M</td>
+<td class="px-4 py-3 text-red-600 font-bold">-2.3%</td>
+<td class="px-4 py-3">0.64</td>
+<td class="px-4 py-3">
+<div class="flex space-x-1">
+<div class="w-2 h-2 rounded-full bg-red-400"></div>
+<div class="w-2 h-2 rounded-full bg-red-400"></div>
+<div class="w-2 h-2 rounded-full bg-red-400"></div>
+</div>
+</td>
+<td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold uppercase">Critical</span></td>
+</tr>
+<tr class="data-table-row transition-colors">
+<td class="px-4 py-3 font-medium">Latin America (LATAM)</td>
+<td class="px-4 py-3">$0.9M</td>
+<td class="px-4 py-3 text-green-600 font-bold">+18.2%</td>
+<td class="px-4 py-3">0.89</td>
+<td class="px-4 py-3">
+<div class="flex space-x-1">
+<div class="w-2 h-2 rounded-full bg-green-400"></div>
+<div class="w-2 h-2 rounded-full bg-outline-variant/30"></div>
+<div class="w-2 h-2 rounded-full bg-outline-variant/30"></div>
+</div>
+</td>
+<td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase">Optimal</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-6">
+<div class="col-span-2 bg-surface-container rounded-2xl p-6 border border-outline-variant/10">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-bold text-sm">Strategic Trend Analysis</h4>
+<div class="flex space-x-2">
+<span class="flex items-center text-[10px] space-x-1"><div class="w-2 h-2 rounded-full bg-primary"></div><span>Revenue</span></span>
+<span class="flex items-center text-[10px] space-x-1"><div class="w-2 h-2 rounded-full bg-outline-variant"></div><span>Target</span></span>
+</div>
+</div>
+<div class="h-40 flex items-end space-x-3 w-full">
+<div class="flex-1 bg-primary/20 rounded-t-lg h-[40%] relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded transition-opacity">42k</div>
+</div>
+<div class="flex-1 bg-primary/40 rounded-t-lg h-[65%]"></div>
+<div class="flex-1 bg-primary/60 rounded-t-lg h-[55%]"></div>
+<div class="flex-1 bg-primary/30 rounded-t-lg h-[85%]"></div>
+<div class="flex-1 bg-primary/50 rounded-t-lg h-[70%]"></div>
+<div class="flex-1 bg-primary/80 rounded-t-lg h-[95%]"></div>
+<div class="flex-1 bg-primary rounded-t-lg h-[80%]"></div>
+</div>
+<div class="flex justify-between mt-4 text-[10px] text-on-surface-variant font-medium">
+<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+</div>
+</div>
+<div class="bg-primary text-on-primary rounded-2xl p-6 flex flex-col justify-between shadow-lg shadow-primary/20">
+<div>
+<div class="flex justify-between items-start">
+<span class="text-[10px] font-bold uppercase tracking-widest opacity-80">Next Strategy Sync</span>
+<span class="material-symbols-outlined text-sm">event</span>
+</div>
+<h4 class="text-xl font-bold mt-2 leading-tight">Board Review - Q3 Forecast</h4>
+<p class="text-xs opacity-70 mt-1">11:30 AM · Virtual War Room</p>
+</div>
+<div class="space-y-3 mt-6">
+<div class="bg-white/10 p-2 rounded-lg border border-white/10">
+<p class="text-[10px] font-bold uppercase tracking-tighter opacity-70">Focus Agenda</p>
+<ul class="text-[11px] mt-1 space-y-1">
+<li class="flex items-center space-x-2"><span class="w-1 h-1 bg-white rounded-full"></span><span>Unit Economics Review</span></li>
+<li class="flex items-center space-x-2"><span class="w-1 h-1 bg-white rounded-full"></span><span>Market Expansion Risks</span></li>
+</ul>
+</div>
+<button class="w-full bg-white text-primary py-2 rounded-lg text-xs font-bold hover:bg-opacity-90 transition-all">Review Briefing Docs</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="w-[35%] h-full bg-white flex flex-col shadow-2xl relative z-10 border-l border-outline-variant/10">
+<div class="h-14 bg-primary text-on-primary flex items-center px-6 justify-between">
+<div class="flex items-center space-x-3">
+<div class="relative">
+<div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/30">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-primary"></div>
+</div>
+<div>
+<h2 class="text-xs font-bold tracking-wide">Aura Strategist AI</h2>
+<span class="text-[9px] opacity-70 uppercase font-bold tracking-widest">Processing Data Streams</span>
+</div>
+</div>
+<button class="p-2 hover:bg-white/10 rounded-full">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-5 space-y-4 flex flex-col">
+<div class="flex flex-col space-y-1.5 max-w-[90%] self-start">
+<div class="bg-surface-container text-on-surface p-3.5 rounded-2xl rounded-tl-none border border-outline-variant/10">
+<p class="text-xs leading-relaxed">I've detected a significant anomaly in the APAC conversion funnel. User drop-off at checkout increased by 18% over the last 24 hours. I've initiated a cross-region comparison. Would you like to see the correlation matrix?</p>
+</div>
+<span class="text-[9px] text-outline px-1">10:14 AM</span>
+</div>
+<div class="flex flex-col space-y-1.5 max-w-[90%] self-end items-end">
+<div class="bg-primary/5 text-on-surface p-3.5 rounded-2xl rounded-tr-none border border-primary/20">
+<p class="text-xs leading-relaxed">Yes, run the correlation. Also, can you re-calculate the forecast for Q4 if we increase APAC ad spend by $200k?</p>
+</div>
+<span class="text-[9px] text-outline px-1">10:15 AM</span>
+</div>
+<div class="space-y-3">
+<div class="bg-surface-container-highest rounded-xl p-4 border border-outline-variant/30">
+<div class="flex items-center space-x-3 mb-3">
+<div class="bg-primary-container p-2 rounded-lg">
+<span class="material-symbols-outlined text-on-primary-container text-sm">calculate</span>
+</div>
+<div>
+<p class="text-[10px] font-bold text-primary uppercase">Scenario Simulation</p>
+<h5 class="text-xs font-bold">APAC Ad Spend Adjustment</h5>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-[11px]">
+<span class="text-on-surface-variant">Estimated Q4 Rev Delta</span>
+<span class="font-bold text-green-600">+$640,000</span>
+</div>
+<div class="flex justify-between text-[11px]">
+<span class="text-on-surface-variant">ROI Confidence</span>
+<span class="font-bold">88%</span>
+</div>
+<div class="bg-white/50 p-2 rounded text-[10px] border border-dashed border-outline-variant/50">
+<strong>Note:</strong> Assumes current CAC remains sub-$45 for APAC markets.
+                        </div>
+</div>
+<button class="w-full mt-3 bg-primary text-on-primary py-1.5 rounded-lg text-[10px] font-bold">Apply to Forecast Tab</button>
+</div>
+<div class="bg-white rounded-xl p-3 border border-outline-variant/20 shadow-sm flex items-center space-x-3">
+<div class="bg-tertiary-container w-10 h-10 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-container text-sm">published_with_changes</span>
+</div>
+<div class="flex-1">
+<p class="text-[9px] font-bold text-tertiary-container uppercase">System Update</p>
+<h5 class="text-[11px] font-bold leading-none">Model Retrained</h5>
+<p class="text-[10px] text-on-surface-variant mt-1">APAC weights adjusted based on live feed.</p>
+</div>
+<span class="material-symbols-outlined text-outline text-sm">check_circle</span>
+</div>
+</div>
+<div class="flex flex-col space-y-1.5 max-w-[90%] self-start">
+<div class="bg-surface-container/50 text-on-surface p-3.5 rounded-2xl rounded-tl-none relative overflow-hidden border border-dashed border-outline-variant/30">
+<div class="ai-pulse absolute -right-2 -top-2 w-8 h-8 rounded-full"></div>
+<p class="text-xs leading-relaxed italic opacity-60">Synthesizing regional datasets...</p>
+</div>
+</div>
+</div>
+<div class="p-4 bg-white border-t border-outline-variant/10">
+<div class="relative flex items-center bg-surface-container-highest rounded-full px-3 py-1 group focus-within:ring-1 focus-within:ring-primary/40 transition-all">
+<button class="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors">
+<span class="material-symbols-outlined text-[18px]">attach_file</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-[13px] py-2 px-2 placeholder:text-outline" placeholder="Command analysis or ask a query..." type="text"/>
+<button class="bg-primary text-on-primary p-2.5 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<div class="fixed bottom-6 left-[62%] -translate-x-1/2 z-50 pointer-events-none opacity-40 hover:opacity-100 transition-opacity">
+<div class="w-12 h-12 bg-white/70 backdrop-blur-xl rounded-full flex items-center justify-center shadow-xl border border-white/50">
+<div class="ai-pulse w-6 h-6 rounded-full"></div>
+<span class="material-symbols-outlined absolute text-primary text-xl" style="font-variation-settings: 'FILL' 1;">query_stats</span>
+</div>
+</div>
+
+</body></html>
