@@ -25,6 +25,7 @@ from app.models.dashboard import DashboardStats
 from app.models.thread import ThreadCreate, ThreadListResponse, ThreadUpdate
 from app.services.thread_service import thread_service
 from app.utils.streaming import format_done_event, format_sse_event
+from app.api.finance import router as finance_router
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -74,6 +75,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(finance_router)
 
 
 # ---------------------------------------------------------------------------
