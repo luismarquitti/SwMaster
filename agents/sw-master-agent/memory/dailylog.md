@@ -1,12 +1,22 @@
 # Daily Log - SwMaster
 
-### [Date and Time (E.g., 2026-03-25 10:00)]
-* **Role:** Maker (`software_construction`)
-* **Action:** Implementation of the login route in the backend.
-* **Result:** Code generated. Tests running locally (failed in 1 edge case).
-* **Next Step:** Invoke Checker role (`quality_assurance`) to fix the failing test.
-
-### [Date and Time]
+### 2026-03-25 18:00
 * **Role:** Executor (`github_ops`)
-* **Action:** Creation of the `feat/auth-login` branch and opening of a Pull Request.
-* **Result:** PR #14 opened awaiting human review.
+* **Action:** Translated the entire repository (docs, agents, skills) from Portuguese to English.
+* **Result:** Consistent English codebase across the project.
+
+### 2026-03-26 16:30
+* **Role:** Maker (`software_construction`)
+* **Action:** Fixed Docker deployment issues for both backend and frontend.
+* **Result:** `docker-compose up` successfully launches both services with volume mounts.
+
+### 2026-03-26 18:15
+* **Role:** Maker (`software_construction`)
+* **Action:** Enhanced Chat UI with auto-resizing text area, "Cancel & Edit" flow, and clipboard support.
+* **Result:** Improved user experience and interface flexibility.
+
+### 2026-03-27 11:30
+* **Role:** Architect (`architect_and_planner`)
+* **Action:** Documented SwMaster Project Architecture and standardized agent memory artifacts.
+* **Result:** Clearer project roadmap and maintained agent state.
+

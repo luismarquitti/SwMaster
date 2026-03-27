@@ -9,10 +9,11 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Role(str, Enum):
+    """Enumeration of valid message roles in the conversation."""
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
@@ -38,8 +39,15 @@ class ChatRequest(BaseModel):
 
 
 class SkillInfo(BaseModel):
-    """Metadata about an available agent skill."""
-
+    """Metadata about an available agent skill.
+    
+    Attributes:
+        id: Unique skill identifier (e.g., 'planner', 'maker').
+        name: Human-readable skill name.
+        role: Internal SOD role associated with the skill.
+        description: Functional description of the skill's capabilities.
+    """
+    model_config = ConfigDict(from_attributes=True)
     id: str
     name: str
     role: str
@@ -47,7 +55,11 @@ class SkillInfo(BaseModel):
 
 
 class AgentInfo(BaseModel):
-    """Metadata about the SwMaster agent."""
+    """Metadata about the SwMaster agent.
+    
+    Contains the agent's identity, version, and the full list of
+    available skills and roles it can perform.
+    """
 
     name: str
     version: str
@@ -57,7 +69,11 @@ class AgentInfo(BaseModel):
 
 
 class SSEEvent(BaseModel):
-    """Server-Sent Event payload (OpenAI chat-completion delta format)."""
+    """Server-Sent Event payload (OpenAI chat-completion delta format).
+    
+    Used for streaming responses to the frontend. Following the OpenAI
+    schema ensures compatibility with standard AI UI components.
+    """
 
     id: str
     object: str = "chat.completion.chunk"

@@ -1,13 +1,16 @@
 # Architecture Decision Records (ADRs)
 
-## [Date] - ADR 001: Choice of Database
-* **Context:** We need to store high-dimensional vectors for AI functionality, in addition to standard relational data.
-* **Alternatives Considered:** MongoDB, Supabase (PostgreSQL with pgvector).
-* **Decision:** Supabase (PostgreSQL).
-* **Rationale (Trade-offs):** pgvector allows semantic search in the same relational database, reducing operational complexity, although the HNSW index requires more RAM.
+## 2026-03-24 - ADR 001: Agent Orchestration Framework
+* **Context:** We need a robust way to orchestrate multi-agent workflows with state management and streaming.
+* **Alternatives Considered:** CrewAI, Autogen, Custom LangChain.
+* **Decision:** LangGraph.
+* **Rationale (Trade-offs):** LangGraph provides fine-grained control over cyclic graphs and state, which is essential for SWEBOK-aligned engineering processes.
 * **Status:** Approved.
-* **Context Diagram:**
-  ```mermaid
-  graph TD;
-      API[FastAPI Backend] -->|Read/Write + pgvector| DB[(Supabase PostgreSQL)];
-  ```
+
+## 2026-03-26 - ADR 002: Frontend Framework Selection
+* **Context:** The initial prototype used vanilla HTML/Tailwind; we need a scalable React framework for OpenUI components.
+* **Alternatives Considered:** Vite, CRA, Next.js.
+* **Decision:** Next.js.
+* **Rationale (Trade-offs):** Next.js offers built-in routing, API routes, and excellent integration with modern UI components, speeding up the implementation of the SwMaster dashboard.
+* **Status:** Approved.
+

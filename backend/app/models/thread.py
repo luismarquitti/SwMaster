@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ThreadBase(BaseModel):
@@ -23,23 +23,33 @@ class ThreadCreate(ThreadBase):
 
 
 class ThreadUpdate(BaseModel):
-    """Data for updating a thread (e.g., renaming)."""
+    """Data for updating a thread (e.g., renaming).
+    
+    Attributes:
+        title: The new title for the conversation thread.
+    """
     title: str | None = None
 
 
 class Thread(ThreadBase):
-    """A conversation thread as expected by OpenUI."""
+    """A conversation thread as expected by the OpenUI frontend.
+    
+    Includes metadata like ID, creation timestamp, and pending status
+    to support seamless state management in the UI.
+    """
 
     id: str
     createdAt: datetime = Field(..., alias="createdAt")
     isPending: bool = False
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class ThreadListResponse(BaseModel):
-    """Response for listing threads."""
+    """Response for listing all conversation threads.
+    
+    Supports pagination via nextCursor (intended for future growth).
+    """
 
     threads: list[Thread]
     nextCursor: Any | None = None

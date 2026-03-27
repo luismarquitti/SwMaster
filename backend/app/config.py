@@ -7,7 +7,7 @@ for the FastAPI application and LLM integrations.
 import os
 from pathlib import Path
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Resolve project root (two levels up from this file)
 _BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -37,10 +37,11 @@ class Settings(BaseSettings):
     agents_dir: Path = _PROJECT_ROOT / "agents"
     skills_dir: Path = _PROJECT_ROOT / "skills"
 
-    class Config:
-        env_file = str(_PROJECT_ROOT / ".env")
-        env_file_encoding = "utf-8"
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        env_file=str(_PROJECT_ROOT / ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 
 settings = Settings()

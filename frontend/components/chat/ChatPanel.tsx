@@ -17,6 +17,12 @@ import { useState, useRef, useEffect } from "react";
 import ChatInput from "./ChatInput";
 import MessageBubble from "./MessageBubble";
 
+interface Thread {
+  id: string;
+  title: string;
+  createdAt: string;
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /**
@@ -58,7 +64,8 @@ function ChatContent() {
         selectThread(selectedThreadId);
       }
     } catch (err) {
-      console.error("Failed to cancel message:", err);
+      console.error("Critical: Failed to cancel message:", err);
+      // Optional: Add UI notification here
     }
   };
 
@@ -139,7 +146,7 @@ function ChatContent() {
             ) : threads.length === 0 ? (
               <p className="text-xs opacity-50 p-4">No history yet.</p>
             ) : (
-              threads.map((t: any) => (
+              threads.map((t: Thread) => (
                 <button
                   key={t.id}
                   onClick={() => {
@@ -196,7 +203,7 @@ function ChatContent() {
           return (
             <MessageBubble
               key={msg.id}
-              role={msg.role as any}
+              role={msg.role as "user" | "assistant"}
               content={textContent}
               isLast={isLastUser}
               onEdit={handleCancelLastMessage}

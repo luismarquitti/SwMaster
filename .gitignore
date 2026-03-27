@@ -57,10 +57,14 @@ $RECYCLE.BIN/
 *.log
 logs/
 coverage/
+.coverage
 .nyc_output/
 out/
 tmp/
 temp/
+pytest.ini
+.pytest_cache/
+.aiready/
 
 # ----- Docker -----
 docker-compose.override.yml

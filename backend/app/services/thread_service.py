@@ -76,9 +76,14 @@ class ThreadService:
     def add_message(self, thread_id: str, message: ChatMessage):
         """Append a message to a thread's history."""
         if thread_id not in self._threads:
-            # Auto-create thread if it doesn't exist? 
-            # For now, we expect threads to be created explicitly.
-            self.create_thread(ThreadCreate(title="New Conversation"))
+            # Auto-create thread with the requested ID if it doesn't exist
+            thread = Thread(
+                id=thread_id,
+                title="New Conversation",
+                createdAt=datetime.now(),
+            )
+            self._threads[thread_id] = thread
+            self._messages[thread_id] = []
         
         if thread_id not in self._messages:
             self._messages[thread_id] = []

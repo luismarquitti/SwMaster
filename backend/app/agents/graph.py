@@ -13,6 +13,8 @@ from langchain_core.messages import AIMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, StateGraph
 
+from app.agents.nodes.base import get_llm
+
 from app.agents.nodes.checker import checker_node
 from app.agents.nodes.conductor import conductor_node
 from app.agents.nodes.executor import executor_node
@@ -45,12 +47,7 @@ async def router_node(state: AgentState) -> AgentState:
     """Classify user intent and set the routing label."""
     logger.info("Entering router_node")
 
-    llm = ChatGoogleGenerativeAI(
-        model=settings.llm_model,
-        google_api_key=settings.gemini_api_key,
-        temperature=0.0,
-    )
-
+    llm = get_llm(temperature=0.0)
     messages = [
         SystemMessage(content=_ROUTER_PROMPT),
         *state["messages"][-3:],  # Only pass recent context for routing
@@ -75,11 +72,7 @@ async def general_node(state: AgentState) -> AgentState:
     logger.info("Entering general_node")
 
     soul = load_soul()
-    llm = ChatGoogleGenerativeAI(
-        model=settings.llm_model,
-        google_api_key=settings.gemini_api_key,
-        temperature=settings.llm_temperature,
-    )
+    llm = get_llm()
 
     system = f"""{soul}
 

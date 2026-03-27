@@ -80,7 +80,7 @@ export default function MessageBubble({ role, content, isLast, onEdit }: Message
               return (
                 <SystemUpdate
                   key={i}
-                  type={updateMatch[1] as any}
+                  type={updateMatch[1] as "success" | "info" | "warning"}
                   label={updateMatch[2]}
                   details={updateMatch[3]}
                 />
@@ -119,7 +119,7 @@ export default function MessageBubble({ role, content, isLast, onEdit }: Message
                 }
                 
                 // Very basic inline formatting
-                let processedLine: any = line;
+                let processedLine: string | React.ReactNode = line;
                 
                 // Bold
                 if (line.includes("**")) {
