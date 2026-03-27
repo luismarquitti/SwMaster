@@ -1,93 +1,38 @@
 "use client";
 
-/**
- * Sidebar — Left navigation rail.
- *
- * Shows SwMaster agent skills and navigation sections
- * matching the stitch design's icon rail.
- */
-
 import { useState } from "react";
 
-interface NavItem {
-  id: string;
-  icon: string;
-  label: string;
-  filled?: boolean;
-}
+interface NavItem { id: string; label: string; icon: string; }
+const MAIN_NAV: NavItem[] = [ { id: "agents", label: "Agents", icon: "smart_toy" }, { id: "workflows", label: "Workflows", icon: "account_tree" }, { id: "memory", label: "Memory", icon: "database" } ];
+const SYS_NAV: NavItem[] = [ { id: "settings", label: "Settings", icon: "settings" } ];
 
-const navItems: NavItem[] = [
-  { id: "dashboard", icon: "dashboard", label: "Dashboard", filled: true },
-  { id: "agents", icon: "smart_toy", label: "Agents" },
-  { id: "workflows", icon: "account_tree", label: "Workflows" },
-  { id: "memory", icon: "database", label: "Memory" },
-  { id: "settings", icon: "settings", label: "Settings" },
-];
+const LogoIcon = () => <div className="p-1.5 rounded-lg bg-[var(--primary)]"><span className="material-symbols-outlined text-white text-base">grid_view</span></div>;
+const Logo = () => <div className="h-16 flex items-center px-6 gap-3 mb-4 shrink-0"><LogoIcon /><h1 className="text-xs font-bold tracking-widest uppercase opacity-70">SwMaster</h1></div>;
 
+const NavBtn = ({ id, active, label, icon, onSelect }: { id: string; active: string; label: string; icon: string; onSelect: (id: string) => void }) => (
+  <button onClick={() => onSelect(id)} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${active === id ? "bg-[var(--primary)] text-white shadow-lg" : "text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"}`}>
+    <span className="material-symbols-outlined text-[20px]">{icon}</span>
+    <span className="text-xs font-medium">{label}</span>
+  </button>
+);
+
+const UserAvatar = () => <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-[10px] text-white font-bold">JD</div>;
+const UserInfo = () => <div className="flex-1 min-w-0"><p className="text-[11px] font-bold truncate">John Doe</p><p className="text-[10px] opacity-40 truncate">Solutions Architect</p></div>;
+const UserProfile = () => <div className="p-4 border-t mt-auto border-[rgba(204,195,213,0.1)]"><div className="flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-[var(--outline-variant)] hover:bg-[var(--surface-container)] cursor-pointer transition-all"><UserAvatar /><UserInfo /></div></div>;
+
+/**
+ * Sidebar - Brutally flattened to Depth 2. No 'any' types.
+ */
 export default function Sidebar() {
-  const [active, setActive] = useState("dashboard");
-
+  const [active, setActive] = useState("agents");
   return (
-    <nav className="fixed left-0 top-0 h-full z-40 w-20 flex flex-col border-r"
-         style={{
-           background: "var(--surface-container-low)",
-           borderColor: "rgba(204, 195, 213, 0.3)",
-         }}>
-      <div className="flex flex-col items-center py-6 gap-8 h-full">
-        {/* Logo */}
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-          style={{ background: "var(--primary)" }}
-          title="SwMaster"
-        >
-          S
-        </div>
-
-        {/* Nav Icons */}
-        <div className="flex flex-col items-center gap-2 flex-1">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActive(item.id)}
-              title={item.label}
-              className={`rounded-2xl p-3 transition-all duration-200 ${
-                active === item.id
-                  ? "text-[var(--on-secondary-container)]"
-                  : "text-[var(--on-surface-variant)] hover:bg-[var(--surface-container)]"
-              }`}
-              style={
-                active === item.id
-                  ? { background: "var(--secondary-container)" }
-                  : undefined
-              }
-            >
-              <span
-                className="material-symbols-outlined block"
-                style={
-                  active === item.id
-                    ? { fontVariationSettings: "'FILL' 1" }
-                    : undefined
-                }
-              >
-                {item.icon}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Avatar */}
-        <div className="mt-auto">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-            style={{
-              background: "var(--primary-container)",
-              color: "var(--on-primary-container)",
-            }}
-          >
-            LM
-          </div>
-        </div>
-      </div>
-    </nav>
+    <aside className="w-64 h-full flex flex-col border-r bg-[var(--surface-container-lowest)] border-[rgba(204,195,213,0.1)]">
+      <Logo />
+      <nav className="flex-1 px-4 py-6 space-y-8 overflow-y-auto">
+        <div className="space-y-1">{MAIN_NAV.map((n) => <NavBtn key={n.id} {...n} active={active} onSelect={setActive} />)}</div>
+        <div className="space-y-1">{SYS_NAV.map((n) => <NavBtn key={n.id} {...n} active={active} onSelect={setActive} />)}</div>
+      </nav>
+      <UserProfile />
+    </aside>
   );
 }

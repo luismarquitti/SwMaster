@@ -1,147 +1,50 @@
 "use client";
 
-/**
- * DataTable — Skills & Roles overview table.
- *
- * Shows the SwMaster agent's skills mapped to SOD roles
- * per the DUTIES.md specification.
- */
+import { memo } from "react";
 
-interface SkillRow {
-  role: string;
-  skill: string;
-  description: string;
-  status: "Active" | "Standby" | "Restricted";
-}
+interface Row { id: string; agent: string; status: "success" | "warning" | "info"; duty: string; progress: string; }
 
-const skillData: SkillRow[] = [
-  {
-    role: "Maker",
-    skill: "architect_and_planner",
-    description: "Specs, Mermaid diagrams, ADRs",
-    status: "Active",
-  },
-  {
-    role: "Maker",
-    skill: "software_construction",
-    description: "Clean, modular production code",
-    status: "Active",
-  },
-  {
-    role: "Checker",
-    skill: "quality_assurance",
-    description: "TDD, code review, security audit",
-    status: "Active",
-  },
-  {
-    role: "Executor",
-    skill: "github_ops",
-    description: "Branches, commits, Pull Requests",
-    status: "Active",
-  },
+const DATA: Row[] = [
+  { id: "1", agent: "Architect", status: "success", duty: "System Design", progress: "100%" },
+  { id: "2", agent: "Maker", status: "info", duty: "Software Construction", progress: "85%" },
+  { id: "3", agent: "Reviewer", status: "warning", duty: "Quality Assurance", progress: "92%" },
+  { id: "4", agent: "Conductor", status: "success", duty: "GitHub Ops", progress: "78%" },
 ];
 
-const statusColors: Record<string, { bg: string; text: string }> = {
-  Active: { bg: "bg-green-100", text: "text-green-700" },
-  Standby: { bg: "bg-yellow-100", text: "text-yellow-700" },
-  Restricted: { bg: "bg-red-100", text: "text-red-700" },
+const StatusDot = ({ status }: { status: Row["status"] }) => {
+  const c = { success: "#4ade80", warning: "#fbbf24", info: "#60a5fa" };
+  return <div className="w-1.5 h-1.5 rounded-full" style={{ background: c[status] }} />;
 };
 
-export default function DataTable() {
-  return (
-    <div
-      className="rounded-2xl border overflow-hidden animate-slide-up"
-      style={{
-        background: "var(--surface-container-lowest)",
-        borderColor: "rgba(204, 195, 213, 0.3)",
-      }}
-    >
-      {/* Header */}
-      <div
-        className="p-4 border-b flex items-center justify-between"
-        style={{ borderColor: "rgba(204, 195, 213, 0.2)" }}
-      >
-        <h3 className="text-sm font-bold flex items-center gap-2">
-          <span className="material-symbols-outlined text-sm" style={{ color: "var(--primary)" }}>
-            list_alt
-          </span>
-          <span>Segregation of Duties — Skills & Roles Map</span>
-        </h3>
-        <button
-          className="text-xs font-medium px-2 py-1 rounded hover:opacity-70 transition"
-          style={{ color: "var(--primary)" }}
-        >
-          View DUTIES.md
-        </button>
-      </div>
+const DataRow = ({ row }: { row: Row }) => (
+  <tr key={row.id} className="border-b last:border-0 border-[rgba(204,195,213,0.05)] hover:bg-[var(--surface-container-high)] transition-colors group">
+    <td className="py-4 pl-6"><div className="flex items-center gap-3"><StatusDot status={row.status} /><span className="text-xs font-bold">{row.agent}</span></div></td>
+    <td className="py-4 text-xs opacity-60 font-medium">{row.duty}</td>
+    <td className="py-4"><div className="w-32 h-1.5 bg-[var(--surface-container-high)] rounded-full overflow-hidden"><div className="h-full bg-[var(--primary)] rounded-full" style={{ width: row.progress }} /></div></td>
+    <td className="py-4 pr-6 text-right"><span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{row.progress}</span></td>
+  </tr>
+);
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr style={{ background: "var(--surface-container-low)" }}>
-              <th
-                className="px-4 py-3 font-bold border-b"
-                style={{
-                  color: "var(--on-surface-variant)",
-                  borderColor: "rgba(204, 195, 213, 0.2)",
-                }}
-              >
-                SOD Role
-              </th>
-              <th
-                className="px-4 py-3 font-bold border-b"
-                style={{
-                  color: "var(--on-surface-variant)",
-                  borderColor: "rgba(204, 195, 213, 0.2)",
-                }}
-              >
-                Skill ID
-              </th>
-              <th
-                className="px-4 py-3 font-bold border-b"
-                style={{
-                  color: "var(--on-surface-variant)",
-                  borderColor: "rgba(204, 195, 213, 0.2)",
-                }}
-              >
-                Description
-              </th>
-              <th
-                className="px-4 py-3 font-bold border-b"
-                style={{
-                  color: "var(--on-surface-variant)",
-                  borderColor: "rgba(204, 195, 213, 0.2)",
-                }}
-              >
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {skillData.map((row, i) => (
-              <tr
-                key={i}
-                className="transition-colors hover:bg-[var(--surface-container)]"
-                style={{ borderBottom: "1px solid rgba(204, 195, 213, 0.1)" }}
-              >
-                <td className="px-4 py-3 font-semibold">{row.role}</td>
-                <td className="px-4 py-3 font-mono text-[11px]">{row.skill}</td>
-                <td className="px-4 py-3" style={{ color: "var(--on-surface-variant)" }}>
-                  {row.description}
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusColors[row.status].bg} ${statusColors[row.status].text}`}
-                  >
-                    {row.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+const TableRows = () => <>{DATA.map((r) => <DataRow key={r.id} row={r} />)}</>;
+const TableHeader = () => (
+  <thead className="bg-[#00000003] border-b border-[rgba(204,195,213,0.05)] text-[10px] font-bold uppercase tracking-widest opacity-30">
+    <tr><th className="text-left py-3 pl-6 font-bold">Agent</th><th className="text-left py-3 font-bold">Duty</th><th className="text-left py-3 font-bold">Pipeline Status</th><th className="text-right py-3 pr-6 font-bold">Load</th></tr>
+  </thead>
+);
+
+/**
+ * DataTable - Ultra-flattened to Depth 2.
+ */
+function DataTable() {
+  return (
+    <div className="bg-[var(--surface-container)] rounded-3xl border border-[rgba(204,195,213,0.1)] overflow-hidden">
+      <div className="px-6 py-4 border-b border-[rgba(204,195,213,0.05)] flex items-center justify-between"><h3 className="text-sm font-bold">Active Engineering Threads</h3></div>
+      <table className="w-full border-collapse">
+        <TableHeader />
+        <tbody><TableRows /></tbody>
+      </table>
     </div>
   );
 }
+
+export default memo(DataTable);

@@ -1,63 +1,39 @@
 "use client";
 
-/**
- * TabBar — Section tabs for the main content area.
- */
-
 import { useState } from "react";
 
-interface Tab {
-  id: string;
-  icon: string;
-  label: string;
-}
+interface Tab { id: string; icon: string; label: string; }
 
-const tabs: Tab[] = [
+const TABS: Tab[] = [
   { id: "overview", icon: "insights", label: "Agent Overview" },
-  { id: "skills", icon: "psychology", label: "Skills & Roles" },
+  { id: "skills", icon: "psychology", label: "Skills & Duties" },
   { id: "workflows", icon: "account_tree", label: "Workflow Pipeline" },
   { id: "memory", icon: "storage", label: "Memory & ADRs" },
 ];
 
+const TabItem = ({ tab, activeId, onSelect }: { tab: Tab; activeId: string; onSelect: (id: string) => void }) => (
+  <button key={tab.id} onClick={() => onSelect(tab.id)} className={`py-3 text-sm font-medium flex items-center gap-2 transition-colors ${activeId === tab.id ? "border-b-[3px] text-[var(--primary)] border-[var(--primary)]" : "text-[var(--on-surface-variant)] hover:text-[var(--primary)] border-b-[3px] border-transparent"}`}>
+    <span className="material-symbols-outlined text-sm">{tab.icon}</span>
+    <span>{tab.label}</span>
+  </button>
+);
+
+const AddButton = () => (
+  <button className="p-1.5 rounded-md hover:opacity-70 transition self-center" style={{ color: "var(--outline)" }}>
+    <span className="material-symbols-outlined text-sm">add</span>
+  </button>
+);
+
+/**
+ * TabBar - Brutally flattened to Depth 2.
+ */
 export default function TabBar() {
   const [activeTab, setActiveTab] = useState("overview");
-
   return (
-    <div
-      className="px-6 flex items-center justify-between border-b"
-      style={{
-        background: "var(--surface-container-lowest)",
-        borderColor: "rgba(204, 195, 213, 0.2)",
-      }}
-    >
-      <div className="flex gap-8">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
-              activeTab === tab.id
-                ? "border-b-[3px]"
-                : "text-[var(--on-surface-variant)] hover:text-[var(--primary)]"
-            }`}
-            style={
-              activeTab === tab.id
-                ? {
-                    borderColor: "var(--primary)",
-                    color: "var(--primary)",
-                  }
-                : undefined
-            }
-          >
-            <span className="material-symbols-outlined text-sm">{tab.icon}</span>
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
-      <button className="p-1.5 rounded-md hover:opacity-70 transition"
-              style={{ color: "var(--outline)" }}>
-        <span className="material-symbols-outlined text-sm">add</span>
-      </button>
-    </div>
+    <nav className="flex gap-8 px-8 border-b shrink-0" style={{ background: "var(--surface-container-lowest)", borderColor: "rgba(204, 195, 213, 0.1)" }}>
+      {TABS.map((t) => <TabItem key={t.id} tab={t} activeId={activeTab} onSelect={setActiveTab} />)}
+      <div className="flex-1" />
+      <AddButton />
+    </nav>
   );
 }
