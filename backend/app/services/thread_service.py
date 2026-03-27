@@ -17,6 +17,7 @@ class ThreadService:
     """Manages thread and message history in memory."""
 
     def __init__(self):
+        """Initializes the in-memory storage for threads and messages."""
         # thread_id -> Thread object
         self._threads: Dict[str, Thread] = {}
         # thread_id -> List of ChatMessage objects
@@ -74,7 +75,14 @@ class ThreadService:
         return False
 
     def add_message(self, thread_id: str, message: ChatMessage):
-        """Append a message to a thread's history."""
+        """Appends a new ChatMessage to the history of a specific thread.
+        
+        If the thread does not exist, it is automatically created with a default title.
+        
+        Args:
+            thread_id: Unique identifier for the thread.
+            message: The ChatMessage object to add.
+        """
         if thread_id not in self._threads:
             # Auto-create thread with the requested ID if it doesn't exist
             thread = Thread(

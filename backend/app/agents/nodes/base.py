@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from langchain_core.messages import SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from app.agents.skills import build_system_prompt
+from app.agents.skills import build_system_context
 from app.config import settings
 
 def get_llm(temperature: float | None = None) -> ChatGoogleGenerativeAI:
@@ -37,14 +37,14 @@ async def execute_agent_node(state: AgentState, role: str, logger: logging.Logge
     """
     logger.info(f"Executing node for role: {role}")
 
-    # Elicit the specific system prompt for the role
-    system_prompt = build_system_prompt(role)
+    # Elicit the specific system context for the role
+    system_context = build_system_context(role)
 
     # Initialize the LLM with project settings
     llm = get_llm()
 
-    # Combine system prompt with conversation history
-    messages = [SystemMessage(content=system_prompt)] + state["messages"]
+    # Combine system context with conversation history
+    messages = [SystemMessage(content=system_context)] + state["messages"]
 
     # Invoke the LLM asynchronously
     response = await llm.ainvoke(messages)

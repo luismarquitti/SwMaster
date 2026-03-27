@@ -21,6 +21,7 @@ from app.agents.nodes.executor import executor_node
 from app.agents.nodes.maker import maker_node
 from app.agents.nodes.planner import planner_node
 from app.agents.state import AgentState
+from app.agents.skills import build_system_context
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -29,8 +30,9 @@ logger = logging.getLogger(__name__)
 # Router: classifies user intent and picks the right skill node
 # ------------------------------------------------------------------
 
-_ROUTER_PROMPT = """You are a routing assistant for the SwMaster agent.
-Your ONLY job is to classify the user's message into one of these skills:
+_ROUTER_CONTEXT = """You are a routing assistant for the SwMaster agent.
+Your duty is to select the most appropriate skill or duty (Planner, Maker, or Checker)
+based on the USER's request.
 
 - **planner** — architecture design, specifications, diagrams, ADRs, requirements
 - **maker** — writing code, implementing features, fixing bugs
@@ -44,12 +46,22 @@ Respond with ONLY the skill name (one word, lowercase). No explanation.
 
 
 async def router_node(state: AgentState) -> AgentState:
-    """Classify user intent and set the routing label."""
+    """Classifies the user intent using the LLM and labels the next duty.
+    
+    This node acts as the entry point for semantic routing, ensuring that 
+    the request is handled by a node with the appropriate Skill context.
+    
+    Args:
+        state: The current conversation state.
+        
+    Returns:
+        Updated state with 'current_duty' set to the classified skill name.
+    """
     logger.info("Entering router_node")
 
     llm = get_llm(temperature=0.0)
     messages = [
-        SystemMessage(content=_ROUTER_PROMPT),
+        SystemMessage(content=_ROUTER_CONTEXT),
         *state["messages"][-3:],  # Only pass recent context for routing
     ]
     response = await llm.ainvoke(messages)
@@ -62,11 +74,20 @@ async def router_node(state: AgentState) -> AgentState:
         route = "general"
 
     logger.info("Router classified intent as: %s", route)
-    return {**state, "current_role": route}
+    return {**state, "current_duty": route}
 
 
 async def general_node(state: AgentState) -> AgentState:
-    """Handle general questions using the SwMaster persona."""
+    """Handles general engineering inquiries using the SwMaster persona.
+    
+    Used when the router cannot map the request to a specific functional skill.
+    
+    Args:
+        state: The current conversation state.
+        
+    Returns:
+        Updated state with the assistant's response and 'current_duty' set to 'general'.
+    """
     from app.agents.skills import load_soul
 
     logger.info("Entering general_node")
@@ -83,7 +104,7 @@ question helpfully and concisely. When relevant, suggest which skill
     messages = [SystemMessage(content=system)] + state["messages"]
     response = await llm.ainvoke(messages)
 
-    return {**state, "messages": [response], "current_role": "general"}
+    return {**state, "messages": [response], "current_duty": "general"}
 
 
 # ------------------------------------------------------------------
@@ -91,10 +112,10 @@ question helpfully and concisely. When relevant, suggest which skill
 # ------------------------------------------------------------------
 
 def _route_by_intent(state: AgentState) -> str:
-    """Return the next node name based on router classification."""
-    role = state.get("current_role", "general")
-    if role in ("planner", "maker", "checker", "executor", "conductor"):
-        return role
+    """Return the next node name based on the duty classification."""
+    duty = state.get("current_duty", "general")
+    if duty in ("planner", "maker", "checker", "executor", "conductor"):
+        return duty
     return "general"
 
 
