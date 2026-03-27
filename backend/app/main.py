@@ -9,9 +9,9 @@ Exposes:
 from __future__ import annotations
 
 import json
-import logging
 import uuid
 from contextlib import asynccontextmanager
+from loguru import logger
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,17 +25,6 @@ from app.models.dashboard import DashboardStats
 from app.models.thread import ThreadCreate, ThreadListResponse, ThreadUpdate
 from app.services.thread_service import thread_service
 from app.utils.streaming import format_done_event, format_sse_event
-
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
-)
-logger = logging.getLogger("swmaster")
-
 
 # ---------------------------------------------------------------------------
 # Lifespan

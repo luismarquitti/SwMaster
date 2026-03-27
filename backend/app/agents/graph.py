@@ -7,7 +7,7 @@ The graph enforces Segregation of Duties (SOD) via conditional edges.
 
 from __future__ import annotations
 
-import logging
+from loguru import logger
 
 from langchain_core.messages import AIMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -23,8 +23,6 @@ from app.agents.nodes.planner import planner_node
 from app.agents.state import AgentState
 from app.agents.skills import build_system_context
 from app.config import settings
-
-logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------
 # Router: classifies user intent and picks the right skill node
@@ -64,7 +62,15 @@ async def router_node(state: AgentState) -> AgentState:
         SystemMessage(content=_ROUTER_CONTEXT),
         *state["messages"][-3:],  # Only pass recent context for routing
     ]
+
+    # Log LLM Input
+    logger.debug(f"Router LLM Input: {messages}")
+
     response = await llm.ainvoke(messages)
+
+    # Log LLM Response
+    logger.debug(f"Router LLM Response: {response.content}")
+
     route = response.content.strip().lower()
 
     # Validate route
@@ -102,7 +108,14 @@ question helpfully and concisely. When relevant, suggest which skill
 (planner, maker, checker, executor) would be appropriate for follow-up tasks.
 """
     messages = [SystemMessage(content=system)] + state["messages"]
+
+    # Log LLM Input
+    logger.debug(f"General Node LLM Input: {messages}")
+
     response = await llm.ainvoke(messages)
+
+    # Log LLM Response
+    logger.debug(f"General Node LLM Response: {response.content}")
 
     return {**state, "messages": [response], "current_duty": "general"}
 

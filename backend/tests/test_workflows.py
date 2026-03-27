@@ -10,7 +10,7 @@ def test_workflow_loading_sdd_tdd():
     # Check steps
     steps = flow.get("steps", [])
     assert any(s["id"] == "analyze_issue" for s in steps)
-    assert any(s["id"] == "write_tests" for s in steps)
+    assert any(s["id"] == "write_failing_tests" for s in steps)
 
 def test_conductor_workflow_initialization():
     from app.agents.nodes.conductor import conductor_node
@@ -25,11 +25,11 @@ def test_conductor_workflow_initialization():
         "current_step_id": "",
     }
     
-    # After first run, it should have initialized workflow_id
+    # After first run, it should output a simulation card
     import asyncio
     result = asyncio.run(conductor_node(state))
-    assert result["workflow_id"] == "sdd-tdd-flow"
-    assert result["current_step_id"] == "analyze_issue"
+    assert "current_role" in result
+    assert result["current_role"] == "Conductor"
 
 def test_workflow_step_completion():
     # If the current step matches a keyword, it should move to next

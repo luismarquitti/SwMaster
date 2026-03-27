@@ -6,13 +6,11 @@ directories and assembles them into system context for each node.
 
 from __future__ import annotations
 
-import logging
 import yaml
 from pathlib import Path
+from loguru import logger
 
 from app.config import settings
-
-logger = logging.getLogger(__name__)
 
 # Map of skill_id → path under skills/
 _SKILL_MAP: dict[str, str] = {

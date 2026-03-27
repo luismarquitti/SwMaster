@@ -6,12 +6,10 @@ modular production code following SWEBOK v4 principles.
 
 from __future__ import annotations
 
-import logging
+from loguru import logger
 
 from app.agents.nodes.base import execute_agent_node
 from app.agents.state import AgentState
-
-logger = logging.getLogger(__name__)
 
 
 async def maker_node(state: AgentState) -> AgentState:
@@ -20,4 +18,4 @@ async def maker_node(state: AgentState) -> AgentState:
     Writes production code based on specifications and tests.
     SOD: Output MUST route to checker_node for review.
     """
-    return await execute_agent_node(state, "maker", logger)
+    return await execute_agent_node(state, "maker")

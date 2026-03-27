@@ -6,12 +6,10 @@ Mermaid diagram generation, and Architecture Decision Records.
 
 from __future__ import annotations
 
-import logging
+from loguru import logger
 
 from app.agents.nodes.base import execute_agent_node
 from app.agents.state import AgentState
-
-logger = logging.getLogger(__name__)
 
 
 async def planner_node(state: AgentState) -> AgentState:
@@ -20,4 +18,4 @@ async def planner_node(state: AgentState) -> AgentState:
     Generates technical specifications, diagrams, and ADRs
     based on the user's request.
     """
-    return await execute_agent_node(state, "planner", logger)
+    return await execute_agent_node(state, "planner")
