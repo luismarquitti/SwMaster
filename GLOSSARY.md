@@ -1,25 +1,34 @@
 # SwMaster Domain Glossary
 
-Standardized terminology to ensure AI Agent consistency and SWEBOK v4 alignment.
+Standardized terminology aligned with the **GitAgent Standard** and **SWEBOK v4**.
 
-## Core Concepts
+## Core Taxonomy (GitAgent)
+
+| Term | Definition | GitAgent Location |
+| :--- | :--- | :--- |
+| **Soul** | The agent's core identity, personality, and foundational approach. | `SOUL.md` |
+| **Skill** | Atomic, reusable capability modules (e.g., `code-review`). | `skills/SKILL.md` |
+| **Duty** | Specific responsibilities/tasks assigned to a role to enforce SOD. | `DUTIES.md` |
+| **Workflow** | Deterministic, multi-step sequences chaining skills and tools. | `workflows/` |
+| **Knowledge** | Hierarchical trees of external information the agent can query. | `knowledge/` |
+| **Memory** | Persistent logs of past decisions, context, and runtime history. | `memory/` |
+
+## Operational Concepts (SwMaster)
 
 | Term | Definition | SWEBOK v4 Alignment |
 | :--- | :--- | :--- |
-| **Agent** | The autonomous software engineering entity (SwMaster). | Software Construction |
-| **Skill** (Role) | A specialized capability assigned to the Agent (e.g., Planner, Maker). Matches an internal SOD Duty. | Professional Practice |
-| **Duty** | An explicit constraint or responsibility defining SOD boundaries. | Software Quality |
-| **Node** | A single step in the LangGraph orchestration (e.g., `planner_node`). | Software Design |
-| **Thread** | A persistent conversation state between a human and SwMaster. | Requirements |
-| **Conductor** | The meta-node responsible for multi-step workflow orchestration. | Engineering Process |
+| **Agent** | The high-level AI persona orchestrating the work. | Software Construction |
+| **Node** | A single execution step in the LangGraph orchestration. | Software Design |
+| **Thread** | A persistent workspace/conversation for a specific task. | Requirements |
+| **Conductor** | The meta-node orchestrating complex SkillsFlows. | Engineering Process |
 
-## Standard Terms (Use These)
-- Use **"Skill"** when referring to functional capabilities (Planner, Maker).
-- Use **"Duty"** when referring to SOD rules.
-- Use **"Thread"** instead of "Conversation" or "Session".
-- Use **"Agent"** to refer to the high-level AI persona.
+## Standard Usage Rules
+- Use **"Skill"** when referring to the *capability* (e.g., Maker's construction skill).
+- Use **"Duty"** when referring to the *responsibility* and SOD constraint.
+- Use **"Workflow"** instead of "Procedure" or "Logic Flow".
+- Use **"Soul"** when referring to the agent's behavioral identity/rules.
 
-## Forbidden Terms (Avoid These)
-- "Bot" (Use "Agent")
-- "Script" (Use "Logic" or "Skill")
-- "User Session" (Use "Thread")
+## Forbidden Terms
+- "Bot" -> Use **Agent**
+- "Session" -> Use **Thread**
+- "Prompt" -> Use **Instruction** (if static) or **Context** (if dynamic)

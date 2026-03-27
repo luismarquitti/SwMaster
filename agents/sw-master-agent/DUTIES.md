@@ -1,18 +1,21 @@
 # Segregation of Duties (SOD)
 
-This file defines the conflict matrices and role restrictions for SwMaster, ensuring compliance with Software Engineering best practices (SWEBOK v4).
+This file defines the conflict matrices and role restrictions for SwMaster, ensuring compliance with Software Engineering best practices (SWEBOK v4) and the GitAgent Standard.
 
 ## Roles and Skill Mapping
 
 | Role | Authorized Skills | Responsibility |
 | :--- | :--- | :--- |
-| **Maker** | `architect_and_planner`, `software_construction` | Responsible for creating specifications, Mermaid diagrams, and writing production source code. |
-| **Checker** | `quality_assurance` | Responsible for writing tests (TDD), reviewing the Maker's code, ensuring test coverage, and checking for vulnerabilities. |
-| **Executor** | `github_ops` | Responsible for interacting with the repository infrastructure (creating branches, committing code, and opening Pull Requests). |
-| **Auditor** | `quality_assurance` (Audit Mode) | Responsible for validating whether architectural decisions were recorded in `memory/key-decisions.md`. |
+| **Planner** | `architect_and_planner` | Responsible for requirements elicitation, SDD, Mermaid diagrams, and ADRs. |
+| **Maker** | `software_construction` | Responsible for translating specifications into production-ready source code. |
+| **Checker** | `quality_assurance` | Responsible for writing tests (TDD), code review, security audits, and coverage management. |
+| **Executor** | `github_ops` | Responsible for repository infrastructure (branches, commits, PRS). |
+| **Conductor** | `skills_orchestrator` | Meta-role responsible for multi-step SDD-TDD flows. |
+| **Auditor** | `quality_assurance` (Audit Mode) | Responsible for validating decision record compliance in `memory/`. |
 
 ## Conflict Matrix and Rules
 
-1. **No Self-Review:** A skill acting as **Maker** in the construction of a feature CANNOT approve its own code. The **Checker** role must be invoked in an isolated LLM context to critique the code.
-2. **Strict TDD:** Production code (`software_construction`) can only be written **after** the **Checker** role has defined the initial unit tests based on the specification.
-3. **Mandatory Human-in-the-Loop:** The **Executor** (`github_ops`) is not allowed to *push* directly to the `main` branch. Every change must generate a branch and Pull Request flow for final human review.
+1. **No Self-Review:** A skill acting as **Maker** CANNOT approve its own code. The **Checker** role must be invoked in an isolated context to critique the code.
+2. **Strict TDD:** Production code (**Maker**) can only be written **after** the **Checker** role has defined initial unit tests.
+3. **Architecture First:** The **Maker** cannot implement features without an approved SDD/ADR from the **Planner**.
+4. **Human-in-the-Loop:** The **Executor** is not allowed to push directly to `main`. Every change must use a Pull Request workflow.
