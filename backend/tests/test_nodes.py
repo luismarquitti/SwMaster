@@ -1,12 +1,9 @@
 import pytest
-import logging
+from loguru import logger
 from unittest.mock import AsyncMock, patch, ANY
 from langchain_core.messages import AIMessage, HumanMessage
 from app.agents.nodes.base import execute_agent_node
 from app.agents.state import AgentState
-
-# Setup logger for tests
-logger = logging.getLogger("test_nodes")
 
 @pytest.mark.asyncio
 async def test_execute_agent_node_success():
@@ -31,7 +28,7 @@ async def test_execute_agent_node_success():
         mock_instance.ainvoke = AsyncMock(return_value=mock_response)
         
         # Execute the node
-        result = await execute_agent_node(state, "planner", logger)
+        result = await execute_agent_node(state, "planner")
         
         # Verify result
         assert result["current_role"] == "planner"
@@ -61,19 +58,23 @@ async def test_all_role_nodes():
         "current_step_id": "",
     }
     
-    with patch("app.agents.nodes.base.execute_agent_node", new_callable=AsyncMock) as mock_execute:
+    with patch("app.agents.nodes.planner.execute_agent_node", new_callable=AsyncMock) as mock_execute_planner, \
+         patch("app.agents.nodes.maker.execute_agent_node", new_callable=AsyncMock) as mock_execute_maker, \
+         patch("app.agents.nodes.executor.execute_agent_node", new_callable=AsyncMock) as mock_execute_executor, \
+         patch("app.agents.nodes.checker.execute_agent_node", new_callable=AsyncMock) as mock_execute_checker:
+
         # Test Planner
         await planner_node(state)
-        assert mock_execute.call_args[0][1] == "planner"
+        assert mock_execute_planner.call_args[0][1] == "planner"
         
         # Test Maker
         await maker_node(state)
-        assert mock_execute.call_args[0][1] == "maker"
+        assert mock_execute_maker.call_args[0][1] == "maker"
         
         # Test Executor
         await executor_node(state)
-        assert mock_execute.call_args[0][1] == "executor"
+        assert mock_execute_executor.call_args[0][1] == "executor"
         
         # Test Checker
         await checker_node(state)
-        assert mock_execute.call_args[0][1] == "checker"
+        assert mock_execute_checker.call_args[0][1] == "checker"

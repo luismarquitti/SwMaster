@@ -51,6 +51,15 @@ The system follows a 3-tier architecture:
 
 ---
 
+## 📝 Logging Strategy
+
+The backend uses **Loguru** for global, structured logging to ensure observability into agent behavior.
+
+- **Unified Stream:** Standard Python logs from FastAPI, Uvicorn, and other dependencies are intercepted and routed through Loguru.
+- **Agent Traceability:** Every LLM interaction (prompts sent and responses received) is explicitly logged at the `DEBUG` level. This includes semantic routing nodes (`router`, `general_node`) and functional nodes (`planner`, `maker`, etc.) via `execute_agent_node`.
+
+---
+
 ## 🛡️ Segregation of Duties (SOD)
 
 SwMaster enforces SOD at the graph level. Each request is routed to an isolated node with a context-specific system prompt derived from `agents/sw-master-agent/SOUL.md` and the corresponding `DUTIES.md` and `SKILL.md`. This prevents the "Maker" from approving its own work, as the system requires a "Checker" node to validate transitions.

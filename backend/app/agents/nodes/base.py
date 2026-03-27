@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
+from loguru import logger
 
 from langchain_core.messages import SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -20,7 +20,7 @@ def get_llm(temperature: float | None = None) -> ChatGoogleGenerativeAI:
     )
 
 
-async def execute_agent_node(state: AgentState, role: str, logger: logging.Logger) -> AgentState:
+async def execute_agent_node(state: AgentState, role: str) -> AgentState:
     """Consolidated logic for executing an agent node.
 
     Refactors the common LLM invocation pattern across different agent nodes
@@ -30,7 +30,6 @@ async def execute_agent_node(state: AgentState, role: str, logger: logging.Logge
     Args:
         state: The current LangGraph state containing agent messages.
         role: The specific role/skill to execute (e.g., "planner", "maker").
-        logger: Logger instance from the calling module for contextual logging.
 
     Returns:
         AgentState: The updated state containing the LLM's response and current role.
@@ -46,8 +45,14 @@ async def execute_agent_node(state: AgentState, role: str, logger: logging.Logge
     # Combine system context with conversation history
     messages = [SystemMessage(content=system_context)] + state["messages"]
 
+    # Log LLM Input
+    logger.debug(f"LLM Input for role {role}: {messages}")
+
     # Invoke the LLM asynchronously
     response = await llm.ainvoke(messages)
+
+    # Log LLM Response
+    logger.debug(f"LLM Response for role {role}: {response.content}")
 
     # Return updated state
     return {

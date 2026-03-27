@@ -22,8 +22,13 @@ async def test_graph_initial_routing_planner():
     # Actually, to test routing specifically without full execution, 
     # we would test the router_node.
     from app.agents.graph import router_node
-    result = await router_node(state)
-    assert result["current_role"] == "planner"
+    from unittest.mock import patch, AsyncMock
+    with patch("app.agents.graph.get_llm") as mock_get_llm:
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke.return_value = AIMessage(content="planner")
+        mock_get_llm.return_value = mock_llm
+        result = await router_node(state)
+    assert result["current_duty"] == "planner"
 
 @pytest.mark.asyncio
 async def test_graph_initial_routing_maker():
@@ -36,8 +41,13 @@ async def test_graph_initial_routing_maker():
         "current_step_id": "",
     }
     from app.agents.graph import router_node
-    result = await router_node(state)
-    assert result["current_role"] == "maker"
+    from unittest.mock import patch, AsyncMock
+    with patch("app.agents.graph.get_llm") as mock_get_llm:
+        mock_llm = AsyncMock()
+        mock_llm.ainvoke.return_value = AIMessage(content="maker")
+        mock_get_llm.return_value = mock_llm
+        result = await router_node(state)
+    assert result["current_duty"] == "maker"
 
 @pytest.mark.asyncio
 async def test_graph_conductor_dynamic_card():
