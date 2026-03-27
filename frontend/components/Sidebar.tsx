@@ -3,7 +3,12 @@
 import { useState } from "react";
 
 interface NavItem { id: string; label: string; icon: string; }
-const MAIN_NAV: NavItem[] = [ { id: "agents", label: "Agents", icon: "smart_toy" }, { id: "workflows", label: "Workflows", icon: "account_tree" }, { id: "memory", label: "Memory", icon: "database" } ];
+const MAIN_NAV: NavItem[] = [ 
+  { id: "agents", label: "Agents", icon: "smart_toy" }, 
+  { id: "workflows", label: "Workflows", icon: "account_tree" }, 
+  { id: "memory", label: "Memory", icon: "database" },
+  { id: "finance", label: "Finance", icon: "payments" }
+];
 const SYS_NAV: NavItem[] = [ { id: "settings", label: "Settings", icon: "settings" } ];
 
 const LogoIcon = () => <div className="p-1.5 rounded-lg bg-[var(--primary)]"><span className="material-symbols-outlined text-white text-base">grid_view</span></div>;
@@ -23,8 +28,8 @@ const UserProfile = () => <div className="p-4 border-t mt-auto border-[rgba(204,
 /**
  * Sidebar - Brutally flattened to Depth 2. No 'any' types.
  */
-export default function Sidebar() {
-  const [active, setActive] = useState("agents");
+export default function Sidebar({ activeInit = "agents" }: { activeInit?: string }) {
+  const [active, setActive] = useState(activeInit);
   return (
     <aside className="w-64 h-full flex flex-col border-r bg-[var(--surface-container-lowest)] border-[rgba(204,195,213,0.1)]">
       <Logo />
