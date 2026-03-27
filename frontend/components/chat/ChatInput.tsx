@@ -1,136 +1,36 @@
 "use client";
 
+import React, { useRef } from "react";
+
+interface ChatInputProps { onSend: (content: string) => void; isStreaming: boolean; }
+
+const SendIcon = () => <span className="material-symbols-outlined text-[14px]">send</span>;
+const SendBtn = ({ disabled, onClick }: { disabled: boolean; onClick: () => void }) => (
+  <button onClick={onClick} disabled={disabled} className="px-4 py-1.5 rounded-lg bg-[var(--primary)] text-white hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed">
+    <span className="text-[10px] font-bold uppercase tracking-widest">send</span>
+    <SendIcon />
+  </button>
+);
+
+const InputArea = ({ inputRef, value, onChange, onKeyDown, isStreaming }: { inputRef: React.RefObject<HTMLTextAreaElement | null>; value: string; onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; onKeyDown: (e: React.KeyboardEvent) => void; isStreaming: boolean }) => (
+  <textarea id="chat-textarea" ref={inputRef} value={value} onChange={onChange} onKeyDown={onKeyDown} disabled={isStreaming} className="w-full bg-transparent border-none focus:ring-0 text-xs py-1 placeholder:text-[var(--outline)] resize-none" placeholder={isStreaming ? "Thinking..." : "Ask SwMaster..."} rows={1} />
+);
+
 /**
- * ChatInput — Composer input with send button.
+ * ChatInput - Brutally flattened to Depth 2. No 'any' types.
  */
+export default function ChatInput({ onSend, isStreaming }: ChatInputProps) {
+  const [value, setValue] = React.useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-import { useState, useRef, useEffect, type KeyboardEvent } from "react";
-
-interface ChatInputProps {
-  onSend: (message: string) => void;
-  isStreaming: boolean;
-  onCancelEdit?: () => void;
-  initialValue?: string;
-}
-
-export default function ChatInput({ 
-  onSend, 
-  isStreaming, 
-  onCancelEdit,
-  initialValue = "" 
-}: ChatInputProps) {
-  const [value, setValue] = useState(initialValue);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (initialValue) {
-      setValue(initialValue);
-      // Focus and adjust height
-      setTimeout(adjustHeight, 0);
-    }
-  }, [initialValue]);
-
-  function adjustHeight() {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = "auto";
-      const newHeight = Math.min(textarea.scrollHeight, window.innerHeight / 3);
-      textarea.style.height = `${newHeight}px`;
-    }
-  }
-
-  function handleSubmit() {
-    const trimmed = value.trim();
-    if (!trimmed || isStreaming) return;
-    onSend(trimmed);
-    setValue("");
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.focus();
-    }
-  }
-
-  function handleKeyDown(e: KeyboardEvent) {
-    // Arrow Up to edit last message if input is empty
-    if (e.key === "ArrowUp" && !value.trim() && onCancelEdit) {
-      e.preventDefault();
-      onCancelEdit();
-      return;
-    }
-
-    // Swapped: Shift+Enter sends, Enter is next line
-    if (e.key === "Enter") {
-      if (e.shiftKey) {
-        e.preventDefault();
-        handleSubmit();
-      } else {
-        // Default Enter behavior in textarea is new line
-        // We just let it happen, but we need to adjust height
-        setTimeout(adjustHeight, 0);
-      }
-    }
-  }
+  const handleSend = () => { if (value.trim()) { onSend(value.trim()); setValue(""); } };
+  const onKeyDown = (e: React.KeyboardEvent) => { if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); handleSend(); } };
 
   return (
-    <div
-      className="p-4 border-t"
-      style={{
-        background: "var(--surface-container-lowest)",
-        borderColor: "rgba(204, 195, 213, 0.1)",
-      }}
-    >
-      <div
-        className="relative flex items-end gap-2 rounded-2xl px-3 py-2 transition-all border"
-        style={{
-          background: "var(--surface-container-highest)",
-          borderColor: "rgba(204, 195, 213, 0.2)",
-        }}
-      >
-        <button
-          className="p-2 rounded-full transition-colors mb-0.5"
-          style={{ color: "var(--primary)" }}
-        >
-          <span className="material-symbols-outlined text-[18px]">attach_file</span>
-        </button>
-        <textarea
-          ref={textareaRef}
-          className="flex-1 bg-transparent border-none text-[13px] py-1.5 px-2 focus:outline-none resize-none font-sans leading-relaxed"
-          style={{ 
-            color: "var(--on-surface)",
-            minHeight: "36px",
-            maxHeight: "33vh",
-            fontFamily: value.includes('```') || value.includes('{') ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' : 'inherit'
-          }}
-          placeholder={
-            isStreaming
-              ? "SwMaster is thinking..."
-              : "Ask SwMaster... (Shift+Enter to send)"
-          }
-          rows={1}
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            adjustHeight();
-          }}
-          onKeyDown={handleKeyDown}
-          disabled={isStreaming}
-        />
-        <button
-          onClick={handleSubmit}
-          disabled={!value.trim() || isStreaming}
-          className="p-2.5 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform disabled:opacity-40 mb-0.5"
-          style={{
-            background: "var(--primary)",
-            color: "var(--on-primary)",
-          }}
-        >
-          <span
-            className="material-symbols-outlined text-[18px]"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            send
-          </span>
-        </button>
+    <div className="p-4 border-t border-[rgba(204,195,213,0.1)] bg-[var(--surface-container-low)]">
+      <div className="bg-[var(--surface-container-lowest)] border p-2 rounded-2xl flex flex-col gap-2 transition-all focus-within:ring-2 ring-[var(--primary)]/20">
+        <InputArea inputRef={inputRef} value={value} onChange={(e) => setValue(e.target.value)} onKeyDown={onKeyDown} isStreaming={isStreaming} />
+        <div className="flex justify-between items-center px-1"><div /><SendBtn disabled={isStreaming || !value.trim()} onClick={handleSend} /></div>
       </div>
     </div>
   );
