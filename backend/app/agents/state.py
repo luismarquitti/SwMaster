@@ -13,16 +13,23 @@ from langgraph.graph.message import add_messages
 
 
 class AgentState(TypedDict):
-    """State shared across all LangGraph nodes.
-
+    """Global state for the LangGraph agent orchestration.
+    
+    This dictionary is the shared memory that flows through all nodes 
+    in the graph, following the GitAgent state management standard.
+    
     Attributes:
-        messages: Conversation history (appended via ``add_messages`` reducer).
-        current_role: The active SOD role (planner, maker, checker, executor).
-        skill_context: Additional context loaded from skill definitions.
-        thread_id: Conversation thread identifier.
+        messages: The append-only conversation history (BaseMessage list).
+        current_role: The active persona role (e.g. 'planner', 'maker').
+        skill_context: Static context loaded from SKILL.md for the active node.
+        thread_id: The persistent conversation workspace identifier.
+        workflow_id: The ID of the deterministic SkillsFlow currently executing.
+        current_step_id: The step ID within the active workflow.
     """
 
     messages: Annotated[list[BaseMessage], add_messages]
-    current_role: str
+    current_duty: str
     skill_context: str
     thread_id: str
+    workflow_id: str
+    current_step_id: str

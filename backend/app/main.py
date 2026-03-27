@@ -101,29 +101,29 @@ async def get_agent_info():
             SkillInfo(
                 id="planner",
                 name="Architecture & Planning",
-                role="Maker",
+                duty="Planner",
                 description="Requirements elicitation, SDD, Mermaid diagrams, ADRs.",
             ),
             SkillInfo(
                 id="maker",
                 name="Software Construction",
-                role="Maker",
+                duty="Maker",
                 description="Translates specifications into modular, clean code.",
             ),
             SkillInfo(
                 id="checker",
                 name="Quality Assurance",
-                role="Checker",
+                duty="Checker",
                 description="TDD, code review, security audit, coverage management.",
             ),
             SkillInfo(
                 id="executor",
                 name="GitHub Operations",
-                role="Executor",
+                duty="Executor",
                 description="Branch management, commits, Pull Request workflows.",
             ),
         ],
-        roles=["Planner", "Maker", "Checker", "Executor", "Auditor"],
+        duties=["Planner", "Maker", "Checker", "Executor", "Auditor"],
     )
 
 
@@ -209,7 +209,7 @@ async def chat(request: ChatRequest):
             lc_messages.append(HumanMessage(content=msg.content))
         elif msg.role == "assistant":
             lc_messages.append(AIMessage(content=msg.content))
-        # system messages are handled internally via skill prompts
+        # system messages are handled internally via skill context
 
     if not lc_messages:
         raise HTTPException(status_code=400, detail="No valid messages provided")
@@ -249,6 +249,8 @@ async def chat(request: ChatRequest):
                 "current_role": "",
                 "skill_context": "",
                 "thread_id": thread_id,
+                "workflow_id": "",
+                "current_step_id": "",
             }
 
             result = await agent_graph.ainvoke(initial_state)

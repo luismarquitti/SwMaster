@@ -1,7 +1,15 @@
 {
-  "dependencies": {
-    "@openuidev/react-headless": "^0.7.10",
-    "@openuidev/react-lang": "^0.1.4",
-    "@openuidev/react-ui": "^0.9.20"
+  "name": "sw-master",
+  "version": "1.0.0",
+  "description": "AI-Ready Senior Software Engineering Agent",
+  "scripts": {
+    "test": "npm run test --prefix frontend && pytest backend/tests",
+    "scan": "npx @aiready/cli scan",
+    "visualise": "npx @aiready/cli visualise"
+  },
+  "devDependencies": {
+    "@aiready/cli": "latest",
+    "jest": "latest",
+    "pytest": "latest"
   }
 }

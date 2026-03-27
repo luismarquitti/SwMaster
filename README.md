@@ -1,6 +1,9 @@
 # SwMaster: Senior Software Engineering Agent & Command Center
 
-SwMaster is an autonomous agent framework and full-stack command center designed according to **SWEBOK v4** (Software Engineering Body of Knowledge) principles. It orchestrates specialized agent nodes to handle the entire software development lifecycle with strict **Segregation of Duties (SOD)**.
+SwMaster is a specialized AI agent framework based on **SWEBOK v4** (Software Engineering Body of Knowledge). It is designed to operate throughout the entire software development lifecycle. It orchestrates specialized agent nodes to handle the entire software development lifecycle with strict **Segregation of Duties (SOD)**.
+
+> [!IMPORTANT]
+> **AI Readiness**: This project follows strict AI-native development standards. See the [GLOSSARY.md](GLOSSARY.md) for unified domain terminology.
 
 ---
 

@@ -9,39 +9,43 @@ from __future__ import annotations
 import json
 from langchain_core.messages import AIMessage
 from app.agents.state import AgentState
+from app.agents.skills import load_workflow
 
 
 async def conductor_node(state: AgentState) -> AgentState:
     """Orchestrates the multi-step SDD-TDD workflow."""
     
-    # We use a state dictionary for the final assistant response
-    # to show the rich simulation card.
+    # Load the deterministic flow from GitAgent data
+    flow = load_workflow("sdd-tdd-flow")
     
+    steps = []
+    if flow and "steps" in flow:
+        for s in flow["steps"]:
+            steps.append({
+                "label": s.get("id", "Unknown").replace("_", " ").title(),
+                "status": "todo"
+            })
+    
+    # Set the first step to active if we are just starting
+    if steps:
+        steps[0]["status"] = "active"
+        
     pipeline_status = {
         "type": "simulation",
-        "title": "SDD-TDD Pipeline Conductor",
-        "description": "Orchestrating the full development lifecycle for your request.",
-        "steps": [
-            {"label": "Architectural Analysis", "status": "active"},
-            {"label": "Unit Test Design", "status": "todo"},
-            {"label": "Code Construction", "status": "todo"},
-            {"label": "Quality Assurance Review", "status": "todo"},
-            {"label": "GitHub Pull Request", "status": "todo"},
-        ]
+        "title": flow.get("name", "SDD-TDD Pipeline").replace("-", " ").title(),
+        "description": flow.get("description", "Orchestrating the full development lifecycle."),
+        "steps": steps
     }
     
     response = (
-        "I'm initiating the **SwMaster SDD-TDD Pipeline**. I will guide you through the "
-        "Analysis, Testing, Coding, Review, and PR phases sequentially.\n\n"
+        f"I'm initiating the **{pipeline_status['title']}**. I will guide you through the "
+        "Analysis, Testing, Coding, Review, and PR phases sequentially following the GitAgent standard.\n\n"
         f"```json\n{json.dumps(pipeline_status, indent=2)}\n```"
     )
-    
-    # In a real system, we would then transition the state to "planner"
-    # for the next turn or via an edge.
     
     return {
         **state,
         "messages": [AIMessage(content=response)],
         "current_role": "Conductor",
-        "skill_context": "Following SDD-TDD-Flow YAML",
+        "skill_context": f"Executing Workflow: {flow.get('name', 'sdd-tdd-flow')}",
     }
