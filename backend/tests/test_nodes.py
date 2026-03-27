@@ -15,7 +15,11 @@ async def test_execute_agent_node_success():
     # Initial state
     state: AgentState = {
         "messages": [HumanMessage(content="Hello")],
-        "current_role": "user"
+        "current_role": "user",
+        "skill_context": "",
+        "thread_id": "test",
+        "workflow_id": "",
+        "current_step_id": "",
     }
     
     # Mock LLM response
@@ -50,7 +54,11 @@ async def test_all_role_nodes():
     
     state: AgentState = {
         "messages": [HumanMessage(content="test")],
-        "current_role": "user"
+        "current_role": "user",
+        "skill_context": "",
+        "thread_id": "test",
+        "workflow_id": "",
+        "current_step_id": "",
     }
     
     with patch("app.agents.nodes.base.execute_agent_node", new_callable=AsyncMock) as mock_execute:

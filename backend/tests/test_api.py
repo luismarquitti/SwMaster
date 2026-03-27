@@ -6,7 +6,7 @@ client = TestClient(app)
 
 def test_read_health():
     """Verify health check endpoint with full app integration."""
-    response = client.get("/api/health")
+    response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     assert "model" in response.json()
@@ -33,7 +33,7 @@ def test_threads_integration():
     # 4. Delete
     resp = client.delete(f"/api/threads/{tid}")
     assert resp.status_code == 200
-    assert resp.json()["status"] == "deleted"
+    assert resp.json()["status"] == "ok"
 
 def test_chat_endpoint_structure():
     """Verify chat endpoint basic validation (mocking actual generation)."""
@@ -41,9 +41,9 @@ def test_chat_endpoint_structure():
     # Since we use ChatGoogleGenerativeAI, it might fail if GEIMINI_API_KEY is not set.
     # But for a basic "structure" test, we just check that the route exists.
     resp = client.post("/api/chat", json={
-        "threadId": "test-tid",
-        "message": "hello",
-        "model": "gemini-2.5-pro"
+        "thread_id": "test-tid",
+        "messages": [{"role": "user", "content": "hello"}],
+        "stream": False
     })
     # If the graph fails due to missing key, it might return 500. 
     # But if we just want to verify the route, we can see if it's 404 or something else.

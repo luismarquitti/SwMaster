@@ -2,6 +2,7 @@ import pytest
 import uuid
 from app.services.thread_service import thread_service
 from app.models.thread import ThreadCreate, ThreadUpdate
+from app.models.chat import ChatMessage, Role
 
 def test_thread_lifecycle():
     """Verify CRUD operations for threads."""
@@ -47,9 +48,8 @@ def test_message_management():
     tid = thread.id
     
     # Add messages
-    from langchain_core.messages import HumanMessage, AIMessage
-    thread_service.add_message(tid, HumanMessage(content="Ping"))
-    thread_service.add_message(tid, AIMessage(content="Pong"))
+    thread_service.add_message(tid, ChatMessage(role=Role.USER, content="Ping"))
+    thread_service.add_message(tid, ChatMessage(role=Role.ASSISTANT, content="Pong"))
     
     history = thread_service.get_messages(tid)
     assert len(history) == 2
